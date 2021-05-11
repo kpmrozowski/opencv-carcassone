@@ -26,7 +26,6 @@ int main(int argc, char** argv)
     int frame_width = src1.cols;
 	int frame_height = src1.rows;
     resize(src1, src, Size(static_cast<std::size_t>(frame_width * scale), static_cast<std::size_t>(frame_height * scale)));
-    imshow("Source", src1);
     // Check if image is loaded fine
     if(src.empty()) {
         printf(" Error opening image\n");
@@ -34,13 +33,13 @@ int main(int argc, char** argv)
         return -1;
     }
     // Edge detection
-    Canny(src, dst, 50, 200, 3);
+    Canny(src, dst, 200, 400, 3);
     // Copy edges to the images that will display the results in BGR
     cvtColor(dst, cdst, COLOR_GRAY2BGR);
     cdstP = cdst.clone();
     // Standard Hough Line Transform
     vector<Vec2f> lines; // will hold the results of the detection
-    HoughLines(dst, lines, 1, CV_PI/180, 150, 0, 0 ); // runs the actual detection
+    HoughLines(dst, lines, 2, CV_PI/180, 210, 0, 0 ); // runs the actual detection
     // Draw the lines
     for( size_t i = 0; i < lines.size(); i++ )
     {
@@ -64,9 +63,9 @@ int main(int argc, char** argv)
         line( cdstP, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0,0,255), 3, LINE_AA);
     }
     // Show results
-    imshow("Source", src);
+    // imshow("Source", src);
     imshow("Detected Lines (in red) - Standard Hough Line Transform", cdst);
-    imshow("Detected Lines (in red) - Probabilistic Line Transform", cdstP);
+    // imshow("Detected Lines (in red) - Probabilistic Line Transform", cdstP);
     // Wait and Exit
     waitKey();
     return 0;
