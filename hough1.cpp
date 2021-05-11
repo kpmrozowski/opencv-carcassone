@@ -1,18 +1,34 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
+
+//  Resize img
+// void resize(InputArray src,
+// 	OutputArray dst,
+// 	Size dsize,
+// 	double fx = 0.1 * 1710,
+// 	double fy = 0.1 * 2280,
+// 	int interpolation = INTER_LINEAR
+// );
+
 using namespace cv;
 using namespace std;
+
 int main(int argc, char** argv)
 {
     // Declare the output variables
-    Mat dst, cdst, cdstP;
-    const char* default_file = "sudoku.png";
+    Mat src, dst, cdst, cdstP;
+    float scale = 0.45;
+    const char* default_file = "test_14.jpg";
     const char* filename = argc >=2 ? argv[1] : default_file;
     // Loads an image
-    Mat src = imread( samples::findFile( filename ), IMREAD_GRAYSCALE );
+    Mat src1 = imread( samples::findFile( filename ), IMREAD_GRAYSCALE );
+    int frame_width = src1.cols;
+	int frame_height = src1.rows;
+    resize(src1, src, Size(static_cast<std::size_t>(frame_width * scale), static_cast<std::size_t>(frame_height * scale)));
+    imshow("Source", src1);
     // Check if image is loaded fine
-    if(src.empty()){
+    if(src.empty()) {
         printf(" Error opening image\n");
         printf(" Program Arguments: [image_name -- default %s] \n", default_file);
         return -1;
