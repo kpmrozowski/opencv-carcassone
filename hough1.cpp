@@ -18,8 +18,8 @@ int main(int argc, char** argv)
 {
     // Declare the output variables
     Mat src, dst, cdst, cdstP;
-    float scale = 0.45;
-    const char* default_file = "test_14.jpg";
+    float scale = 1;
+    const char* default_file = "test_00.jpg";
     const char* filename = argc >=2 ? argv[1] : default_file;
     // Loads an image
     Mat src1 = imread( samples::findFile( filename ), IMREAD_GRAYSCALE );
@@ -63,9 +63,9 @@ int main(int argc, char** argv)
         line( cdstP, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0,0,255), 3, LINE_AA);
     }
     // Show results
-    // imshow("Source", src);
+    imshow("Source", src);
     imshow("Detected Lines (in red) - Standard Hough Line Transform", cdst);
-    // imshow("Detected Lines (in red) - Probabilistic Line Transform", cdstP);
+    imshow("Detected Lines (in red) - Probabilistic Line Transform", cdstP);
     // Wait and Exit
     waitKey();
     return 0;
