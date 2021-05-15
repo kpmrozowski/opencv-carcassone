@@ -22,7 +22,7 @@ std::vector<std::string> get_filenames( std::experimental::filesystem::path path
     return filenames;
 }
 
-int detect_lines(const char* filename) {
+cv::Mat detect_liness(const char* filename) {
     /* Declare the output variables */
     cv::Mat src, dst, cdst, cdstP;
 
@@ -36,13 +36,13 @@ int detect_lines(const char* filename) {
     /* Check if image is loaded fine */
     if(src1.empty()) {
         printf(" Error opening image\n");
-        printf(" Program Arguments: [image_name -- default %s] \n", filename);
-        return -1;
+        printf(" Program Arguments: [image_name -- default %s] \n", filename);;
+        return src1;
     }
 
     /* Edge detection */
-    if (false)
-        Canny(src, dst, 100, 300, 3, true);
+    if (true)
+        Canny(src, dst, 50, 100, 3, true);
     else 
         Canny(src, dst, 16000, 10000, 7, true);
     
@@ -76,6 +76,7 @@ int detect_lines(const char* filename) {
         }
         imshow("Detected Lines (in red) - Standard Hough Line Transform", cdst);
         cv::waitKey();
+        return cdst;
     } else {
         /* Probabilistic Line Transform */
         /* results of the detection */
@@ -93,9 +94,9 @@ int detect_lines(const char* filename) {
         }
         cv::imshow("Detected Lines (in red) - Probabilistic Line Transform", cdstP);
         cv::waitKey();
+        return cdstP;
     }
 }
-
 } // namespace twm::hough
 
 
