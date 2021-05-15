@@ -24,6 +24,8 @@ out
 *.mod
 *.smod
 
+out.txt
+
 # Compiled Static libraries
 *.lai
 *.la

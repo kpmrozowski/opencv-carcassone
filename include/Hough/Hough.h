@@ -1,12 +1,7 @@
 #ifndef TWM_HOUGH_H
 #define TWM_HOUGH_H
-#include <opencv2/imgcodecs.hpp>
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgproc.hpp>
-#include <iostream>
-#include <vector>
-#include <string>
-#include <experimental/filesystem>
+
+#include "Utils.h"
 
 namespace twm::hough {
 
@@ -60,6 +55,7 @@ cv::Mat detect_liness(const char* filename) {
         if (false)
             for (auto line : lines)
                 std::cout << line[0] << " " << line[1] << std::endl;
+                
 
         /* Draw the lines */
         for( std::size_t i = 0; i < lines.size(); i++ )
@@ -81,17 +77,29 @@ cv::Mat detect_liness(const char* filename) {
         /* Probabilistic Line Transform */
         /* results of the detection */
         std::vector<cv::Vec4i> linesP;
+
         HoughLinesP(dst, linesP, 0.1, CV_PI/1800, 1, 130, 24); // runs the actual detection
         if (false)
             for (auto line : linesP)
                 std::cout << line[0] << " " << line[1] << " " << line[2] << " " << line[3] << std::endl;
         
+        std::vector<double> angles = getAngles(linesP);
+        std::vector<unsigned short> histogram = getAnglesHistogram(angles, 90);
+
+        // std::cout << "Angles: " << std::endl;
+        // for (auto a : angles) {
+        //     std::cout << a << std::endl;
+        // }
+        // std::cout << std::endl;
+
         /* Draw the lines */
         for( std::size_t i = 0; i < linesP.size(); i++ )
         {
             cv::Vec4i l = linesP[i];
             cv::line( cdstP, cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), cv::Scalar(0,0,255)  , 3, cv::LINE_AA);
         }
+        
+        // for (auto line : linesP) std::cout << line[0] << " " << line[1] << " " << line[2] << " " << line[3] << std::endl;
         cv::imshow("Detected Lines (in red) - Probabilistic Line Transform", cdstP);
         cv::waitKey();
         return cdstP;
