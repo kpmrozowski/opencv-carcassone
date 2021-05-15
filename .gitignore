@@ -34,3 +34,5 @@ out
 *.exe
 *.out
 *.app
+
+output_images/resources/*
