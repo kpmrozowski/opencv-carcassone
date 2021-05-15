@@ -84,7 +84,7 @@ cv::Mat detect_liness(const char* filename) {
                 std::cout << line[0] << " " << line[1] << " " << line[2] << " " << line[3] << std::endl;
         
         std::vector<double> angles = getAngles(linesP);
-        std::vector<unsigned short> histogram = getAnglesHistogram(angles, 90);
+        std::vector<unsigned short> histogram = getAnglesHistogram(angles, 90).first;
 
         // std::cout << "Angles: " << std::endl;
         // for (auto a : angles) {
@@ -93,6 +93,8 @@ cv::Mat detect_liness(const char* filename) {
         // std::cout << std::endl;
 
         /* Draw the lines */
+        std::pair<std::vector<unsigned short>, std::vector<unsigned short>> pair = getAnglesHistogram(angles, 90);
+        linesP = GetHVlines(pair, linesP, angles);
         for( std::size_t i = 0; i < linesP.size(); i++ )
         {
             cv::Vec4i l = linesP[i];
