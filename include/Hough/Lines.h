@@ -43,19 +43,20 @@ public:
     }
 
     Histogram getAngleHistogram(int segments) {
-        Histogram histogram(segments, std::make_pair(std::numeric_limits<double>::infinity(), 0));
+        Histogram histogram(segments, std::make_pair(-std::numeric_limits<double>::infinity(), 0));
         double pivot_angle = 90 - 180/static_cast<double>(segments);
         size_t pivot_idx = 0;
         for (int i = 0; i < linesvec.size(); i++) {
             if (linesvec[i].angle > pivot_angle) {
                 histogram[pivot_idx].second++;
             } else {
-                pivot_angle -= 180/static_cast<double>(segments);
-                pivot_idx++;
                 histogram[pivot_idx].first = pivot_angle;
+                pivot_idx++;
+                pivot_angle -= 180/static_cast<double>(segments);
                 i--;
             }
         }
+        (*(histogram.end() - 1)).first = -90.;
         std::cout << std::endl << "Histogram:" << std::endl;
         for (int i = 0; i < segments; i++) {
             std::cout << "i: " << i << "\tangle: " << histogram[i].first << "\tcount: " << histogram[i].second << std::endl;
@@ -64,7 +65,7 @@ public:
     }
 
     Lines GetHVlines() {
-        Histogram hist = getAngleHistogram(100);
+        Histogram hist = getAngleHistogram(7);
         Lines filteredLines;
         size_t length = hist.size();
         size_t cluster = length / 4.;

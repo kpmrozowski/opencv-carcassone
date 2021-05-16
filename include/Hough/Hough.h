@@ -84,7 +84,7 @@ cv::Mat detect_liness(const char* filename) {
 
         std::vector<cv::Vec4i> linesPCoords, linesPHV;
 
-        HoughLinesP(dst, linesPCoords, 0.1, CV_PI/1800, 1, 130, 24); // runs the actual detection
+        HoughLinesP(dst, linesPCoords, 0.1, CV_PI/1800, 1, 50, 24); // runs the actual detection
 
         Lines lines(linesPCoords);
         // lines.print();
