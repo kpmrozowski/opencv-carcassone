@@ -1,7 +1,7 @@
 #ifndef TWM_HOUGH_H
 #define TWM_HOUGH_H
 
-#include "Utils.h"
+#include "Lines.h"
 
 namespace twm::hough {
 
@@ -89,21 +89,18 @@ cv::Mat detect_liness(const char* filename) {
         Lines lines(linesPCoords);
         lines.print();
 
-        std::vector<unsigned short> hist = lines.getAngleHistogram(100);
+        Lines filteredLines = lines.GetHVlines();
+        filteredLines.print();
 
         /* Draw the lines */
-        // linesPHV = GetHVlines(pair, linesPCoords, angles);
-
         for(auto line : lines.linesvec)
         {
-            line.draw(cdstP, 255, 255, 0);
+            line.draw(cdstP, 255, 150, 0);
         }
-
-        // for( std::size_t i = 0; i < linesPHV.size(); i++ )
-        // {
-        //     cv::Vec4i lHV = linesPHV[i];
-        //     cv::line( cdstP, cv::Point(lHV[0], lHV[1]), cv::Point(lHV[2], lHV[3]), cv::Scalar(0,0,255)  , 3, cv::LINE_AA);
-        // }
+        for(auto line : filteredLines.linesvec)
+        {
+            line.draw(cdstP, 255, 0, 0);
+        }
         
         cv::imshow("Detected Lines (in red) - Probabilistic Line Transform", cdstP);
         cv::waitKey();
