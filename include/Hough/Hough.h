@@ -76,37 +76,36 @@ cv::Mat detect_liness(const char* filename) {
     } else {
         /* Probabilistic Line Transform */
         /* results of the detection */
-        std::vector<cv::Vec4i> linesP, linesPHV;
+        std::vector<cv::Vec4i> linesPCoords, linesPHV;
 
-        HoughLinesP(dst, linesP, 0.1, CV_PI/1800, 1, 130, 24); // runs the actual detection
-        if (false)
-            for (auto line : linesP)
-                std::cout << line[0] << " " << line[1] << " " << line[2] << " " << line[3] << std::endl;
-        
-        std::vector<double> angles = getAngles(linesP);
-        std::vector<unsigned short> histogram = getAnglesHistogram(angles, 22).first;
+        HoughLinesP(dst, linesPCoords, 0.1, CV_PI/1800, 1, 130, 24); // runs the actual detection
 
-        // std::cout << "Angles: " << std::endl;
-        // for (auto a : angles) {
-        //     std::cout << a << std::endl;
-        // }
-        // std::cout << std::endl;
+
+        Lines lines(linesPCoords);
+        lines.print();
+
+        // Line l({10, 100, 100, 200});
+        // l.draw(cdstP, 255,0,0);
+        // std::cout << "Line:" << std::endl;
+        // l.print();
+
+        std::vector<unsigned short> hist = lines.getAngleHistogram(100);
 
         /* Draw the lines */
-        std::pair<std::vector<unsigned short>, std::vector<unsigned short>> pair = getAnglesHistogram(angles, 22);
-        linesPHV = GetHVlines(pair, linesP, angles);
-        for( std::size_t i = 0; i < linesP.size(); i++ )
+        // linesPHV = GetHVlines(pair, linesPCoords, angles);
+
+
+        for(auto line : lines.linesvec)
         {
-            cv::Vec4i l = linesP[i];
-            cv::line( cdstP, cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), cv::Scalar(0,255,0)  , 3, cv::LINE_AA);
+            line.draw(cdstP, 255, 255, 0);
         }
-        for( std::size_t i = 0; i < linesPHV.size(); i++ )
-        {
-            cv::Vec4i lHV = linesPHV[i];
-            cv::line( cdstP, cv::Point(lHV[0], lHV[1]), cv::Point(lHV[2], lHV[3]), cv::Scalar(0,0,255)  , 3, cv::LINE_AA);
-        }
+
+        // for( std::size_t i = 0; i < linesPHV.size(); i++ )
+        // {
+        //     cv::Vec4i lHV = linesPHV[i];
+        //     cv::line( cdstP, cv::Point(lHV[0], lHV[1]), cv::Point(lHV[2], lHV[3]), cv::Scalar(0,0,255)  , 3, cv::LINE_AA);
+        // }
         
-        // for (auto line : linesP) std::cout << line[0] << " " << line[1] << " " << line[2] << " " << line[3] << std::endl;
         cv::imshow("Detected Lines (in red) - Probabilistic Line Transform", cdstP);
         cv::waitKey();
         return cdstP;

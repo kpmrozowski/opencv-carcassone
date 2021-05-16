@@ -1,54 +1,11 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include <opencv2/imgcodecs.hpp>
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgproc.hpp>
-#include <iostream>
-#include <vector>
-#include <string>
-#include <experimental/filesystem>
-#include <algorithm>
-#include <cmath>
+#include "Lines.h"
 
 #define _USE_MATH_DEFINES
 using vus = std::vector<unsigned short>;
 using vcv4 = std::vector<cv::Vec4i>;
-
-auto getAnglesHistogram(std::vector<double>& angles, int segments) {
-    std::sort(angles.begin(), angles.end());
-    std::vector<unsigned short> histogram(segments, 0);
-    std::vector<unsigned short> idx;
-    double pivot = -M_PI/2 + M_PI / segments;
-    int j = 0;
-    for (int i = 0; i < angles.size(); i++) {
-        if (angles[i] < pivot) {
-            histogram[j] += 1;
-        } else {
-            pivot += M_PI / segments;
-            idx.push_back(i);
-            j++;
-            i--;
-        }
-    }
-    std::cout << "Histogram:" << std::endl;
-    for (auto h : histogram) {
-        std::cout << h << std::endl;
-    }
-    return std::make_pair(histogram, idx);
-}
-
-std::vector<double> getAngles(vcv4& linesin) {
-    std::vector<double> angles;
-    for (const auto& line : linesin) {
-        if (line[2] == line[0]) {
-            angles.push_back(static_cast<double>(M_PI/2.));
-        } else {
-            angles.push_back(std::atan((line[3] - line[1])/(line[2] - line[0])));
-        }
-    }
-    return angles;
-}
 
 vcv4 GetHVlines(std::pair<vus, vus>& pair, vcv4 linesP, std::vector<double>& angles) {
     vcv4 linesPHV;

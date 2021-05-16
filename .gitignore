@@ -24,8 +24,6 @@ out
 *.mod
 *.smod
 
-out.txt
-
 # Compiled Static libraries
 *.lai
 *.la
@@ -38,3 +36,5 @@ out.txt
 *.app
 
 output_images/resources/*
+valgrind-out.txt
+out.txt
