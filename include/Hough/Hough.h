@@ -76,24 +76,23 @@ cv::Mat detect_liness(const char* filename) {
     } else {
         /* Probabilistic Line Transform */
         /* results of the detection */
+
+        // Line l({10, 10, 10, 200});
+        // l.draw(cdstP, 255,0,0);
+        // std::cout << std::endl << "Line:" << std::endl;
+        // l.print();
+
         std::vector<cv::Vec4i> linesPCoords, linesPHV;
 
         HoughLinesP(dst, linesPCoords, 0.1, CV_PI/1800, 1, 130, 24); // runs the actual detection
 
-
         Lines lines(linesPCoords);
         lines.print();
-
-        // Line l({10, 100, 100, 200});
-        // l.draw(cdstP, 255,0,0);
-        // std::cout << "Line:" << std::endl;
-        // l.print();
 
         std::vector<unsigned short> hist = lines.getAngleHistogram(100);
 
         /* Draw the lines */
         // linesPHV = GetHVlines(pair, linesPCoords, angles);
-
 
         for(auto line : lines.linesvec)
         {

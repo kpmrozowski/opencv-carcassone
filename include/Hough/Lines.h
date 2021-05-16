@@ -7,6 +7,7 @@ class Lines
 {
 public:
     std::vector<Line> linesvec;
+    Lines(){}
     Lines(std::vector<cv::Vec4i>& linesCoords)
     {
         linesvec.reserve(linesCoords.size());
@@ -25,7 +26,7 @@ public:
     }
     void sortByAngles() {
         std::sort(linesvec.begin(), linesvec.end(), [](const Line& l1, const Line& l2) -> bool
-            { return l1.angle < l2.angle; }
+            { return l1.angle > l2.angle; }
         );
     }
     void print() {
@@ -36,30 +37,20 @@ public:
     }
     std::vector<unsigned short> getAngleHistogram(int segments) {
         std::vector<unsigned short> histogram(segments, 0);
-        std::cout << "segments: " << segments << std::endl;
-        int counter = 0;
-        double pivot = -90 + 180/segments;
+        double pivot = 90 - 180/static_cast<double>(segments);
         int j = 0;
         for (int i = 0; i < linesvec.size(); i++) {
-            if (j >= segments) {
-                std::cout << "j przekroczyl dozwolona wartosc" << std::endl;
-                break;
-            }
-            if (linesvec[i].angle < pivot) {
-                linesvec[i].print();
-                std::cout << "j: " << j << std::endl;
+            if (linesvec[i].angle > pivot) {
                 histogram[j]++;
-                counter++;
-                std::cout << "counter: " << counter << std::endl;
             } else {
-                pivot += 180/segments;
+                pivot -= 180/static_cast<double>(segments);
                 j++;
                 i--;
             }
         }
-        std::cout << "Histogram:" << std::endl;
-        for (auto h : histogram) {
-            std::cout << h << std::endl;
+        std::cout << std::endl << "Histogram:" << std::endl;
+        for (int i = 0; i < segments; i++) {
+            std::cout << i << " " << histogram[i] << std::endl;
         }
         return histogram;
     }
