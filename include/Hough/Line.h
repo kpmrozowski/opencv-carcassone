@@ -37,7 +37,7 @@ private:
         if (coords[2] - coords[0] == 0) {
             angle = 90;
         } else {
-            angle = std::atan((coords[3] - coords[1])/(coords[2] - coords[0])) * 180/M_PI;
+            angle = std::atan((coords[3] - coords[1])/static_cast<double>(coords[2] - coords[0])) * 180/M_PI;
         }
     }
 };

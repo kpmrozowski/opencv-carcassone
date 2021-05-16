@@ -63,18 +63,15 @@ public:
         vus hist1(hist.begin(), hist.begin() + length/4);
         vus hist2(hist.begin() + length/4 + 1, hist.begin() + 3*length/4);
         vus hist3(hist.begin() + 3*length/4 + 1, hist.end());
+        hist1.insert(std::end(hist1), std::begin(hist3), std::end(hist3));
         auto it1 = std::max_element(hist1.begin(), hist1.end());
         auto it2 = std::max_element(hist2.begin(), hist2.end());
-        auto it3 = std::max_element(hist3.begin(), hist3.end());
         auto angles1_przedzial = -90 + (it1 - hist1.begin()) * (180 / length);
         auto angles2_przedzial = -90 + (it2 - hist2.begin()) * (180 / length);
-        auto angles3_przedzial = -90 + (it3 - hist3.begin()) * (180 / length);
         for (std::size_t i = 0; i < linesvec.size(); i++) {
             if (linesvec[i].angle > angles1_przedzial && linesvec[i].angle < angles1_przedzial + (180/length)) {
                 filteredLines.linesvec.push_back(linesvec[i]);
             } else if (linesvec[i].angle > angles2_przedzial && linesvec[i].angle < angles2_przedzial + (180/length)) {
-                filteredLines.linesvec.push_back(linesvec[i]);
-            } else if (linesvec[i].angle > angles3_przedzial && linesvec[i].angle < angles3_przedzial + (180/length)) {
                 filteredLines.linesvec.push_back(linesvec[i]);
             }
         }

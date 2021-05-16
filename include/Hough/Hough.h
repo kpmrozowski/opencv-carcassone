@@ -87,7 +87,7 @@ cv::Mat detect_liness(const char* filename) {
         HoughLinesP(dst, linesPCoords, 0.1, CV_PI/1800, 1, 130, 24); // runs the actual detection
 
         Lines lines(linesPCoords);
-        lines.print();
+        // lines.print();
 
         Lines filteredLines = lines.GetHVlines();
         filteredLines.print();
@@ -95,7 +95,11 @@ cv::Mat detect_liness(const char* filename) {
         /* Draw the lines */
         for(auto line : lines.linesvec)
         {
-            line.draw(cdstP, 255, 150, 0);
+            // if (line.angle < 5 && line.angle > -5) {
+            if (true) {
+                line.print();
+                line.draw(cdstP, 255, 150, 0);
+            }
         }
         for(auto line : filteredLines.linesvec)
         {
