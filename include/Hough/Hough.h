@@ -84,7 +84,9 @@ cv::Mat detect_liness(const char* filename) {
 
         std::vector<cv::Vec4i> linesPCoords, linesPHV;
 
-        HoughLinesP(dst, linesPCoords, 0.1, CV_PI/1800, 1, 50, 24); // runs the actual detection
+        HoughLinesP(dst, linesPCoords, 1, CV_PI/180, 100, 80, 20); // runs the actual detection
+
+        // HoughLinesP(dst, linesPCoords, 0.1, CV_PI/1800, 1, 130, 24);
 
         Lines lines(linesPCoords);
         // lines.print();
@@ -95,11 +97,8 @@ cv::Mat detect_liness(const char* filename) {
         /* Draw the lines */
         for(auto line : lines.m_linesvec)
         {
-            // if (line.angle < 5 && line.angle > -5) {
-            if (true) {
-                line.print();
-                line.draw(cdstP, 255, 150, 0);
-            }
+            line.print();
+            line.draw(cdstP, 255, 150, 0);
         }
         for(auto line : filteredLines.m_linesvec)
         {
@@ -110,8 +109,8 @@ cv::Mat detect_liness(const char* filename) {
         float scale = 1080. / frame_height;
         cv::resize(cdstP, cdstP, cv::Size(static_cast<std::size_t>(frame_width * scale), static_cast<std::size_t>(frame_height * scale)));
         
-        cv::imshow("Detected Lines (in red) - Probabilistic Line Transform", cdstP);
-        auto btn = cv::waitKey();
+        // cv::imshow("Detected Lines (in red) - Probabilistic Line Transform", cdstP);
+        // cv::waitKey();
         return cdstP;
     }
 }

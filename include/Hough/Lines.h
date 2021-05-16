@@ -81,7 +81,7 @@ public:
     }
 
     Lines GetHVlines() {
-        Histogram hist = getAngleHistogram(7);
+        Histogram hist = getAngleHistogram(12);
         Lines filteredLines;
         size_t length = hist.size();
         size_t cluster = length / 4.;
