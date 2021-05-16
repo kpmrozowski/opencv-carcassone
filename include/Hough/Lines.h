@@ -2,7 +2,12 @@
 #define LINES_H
 
 #include "Line.h"
-using vus = std::vector<unsigned short>;
+#include  <limits>
+using size_t = std::size_t;
+using vus = std::vector<size_t>;
+using count = size_t;
+using pivot_angle = double;
+using Histogram = std::vector<std::pair<pivot_angle, count>>;
 
 class Lines
 {
@@ -36,42 +41,49 @@ public:
             line.print();
         }
     }
-    std::vector<unsigned short> getAngleHistogram(int segments) {
-        std::vector<unsigned short> histogram(segments, 0);
-        double pivot = 90 - 180/static_cast<double>(segments);
-        int j = 0;
+
+    Histogram getAngleHistogram(int segments) {
+        Histogram histogram(segments, std::make_pair(std::numeric_limits<double>::infinity(), 0));
+        double pivot_angle = 90 - 180/static_cast<double>(segments);
+        size_t pivot_idx = 0;
         for (int i = 0; i < linesvec.size(); i++) {
-            if (linesvec[i].angle > pivot) {
-                histogram[j]++;
+            if (linesvec[i].angle > pivot_angle) {
+                histogram[pivot_idx].second++;
             } else {
-                pivot -= 180/static_cast<double>(segments);
-                j++;
+                pivot_angle -= 180/static_cast<double>(segments);
+                pivot_idx++;
+                histogram[pivot_idx].first = pivot_angle;
                 i--;
             }
         }
         std::cout << std::endl << "Histogram:" << std::endl;
         for (int i = 0; i < segments; i++) {
-            std::cout << i << " " << histogram[i] << std::endl;
+            std::cout << "i: " << i << "\tangle: " << histogram[i].first << "\tcount: " << histogram[i].second << std::endl;
         }
         return histogram;
     }
+
     Lines GetHVlines() {
-        std::vector<unsigned short> hist = getAngleHistogram(100);
+        Histogram hist = getAngleHistogram(100);
         Lines filteredLines;
-        unsigned short length = hist.size();
-        unsigned short cluster = length / 4.;
-        vus hist1(hist.begin(), hist.begin() + length/4);
-        vus hist2(hist.begin() + length/4 + 1, hist.begin() + 3*length/4);
-        vus hist3(hist.begin() + 3*length/4 + 1, hist.end());
+        size_t length = hist.size();
+        size_t cluster = length / 4.;
+        Histogram hist1(hist.begin(), hist.begin() + length/4);
+        Histogram hist2(hist.begin() + length/4 + 1, hist.begin() + 3*length/4);
+        Histogram hist3(hist.begin() + 3*length/4 + 1, hist.end());
+        size_t len1 = hist1.size();
+        size_t len2 = hist2.size();
+        size_t len3 = hist3.size();
         hist1.insert(std::end(hist1), std::begin(hist3), std::end(hist3));
-        auto it1 = std::max_element(hist1.begin(), hist1.end());
-        auto it2 = std::max_element(hist2.begin(), hist2.end());
-        auto angles1_przedzial = -90 + (it1 - hist1.begin()) * (180 / length);
-        auto angles2_przedzial = -90 + (it2 - hist2.begin()) * (180 / length);
+        auto it1 = std::max_element(hist1.begin(), hist1.end(), [](const auto& lhs, const auto& rhs) { return lhs.second < rhs.second; });
+        auto it2 = std::max_element(hist2.begin(), hist2.end(), [](const auto& lhs, const auto& rhs) { return lhs.second < rhs.second; });
+        std::cout << "pivot_angle1: " << (*it1).first << std::endl;
+        std::cout << "pivot_angle2: " << (*it2).first << std::endl;
+
         for (std::size_t i = 0; i < linesvec.size(); i++) {
-            if (linesvec[i].angle > angles1_przedzial && linesvec[i].angle < angles1_przedzial + (180/length)) {
+            if (linesvec[i].angle > (*it1).first && linesvec[i].angle < (*it1).first + 180/length) {
                 filteredLines.linesvec.push_back(linesvec[i]);
-            } else if (linesvec[i].angle > angles2_przedzial && linesvec[i].angle < angles2_przedzial + (180/length)) {
+            } else if (linesvec[i].angle > (*it2).first && linesvec[i].angle < (*it2).first + 180/length) {
                 filteredLines.linesvec.push_back(linesvec[i]);
             }
         }
