@@ -82,31 +82,52 @@ cv::Mat detect_liness(const char* filename) {
         // std::cout << std::endl << "Line:" << std::endl;
         // l.print();
 
+
         std::vector<cv::Vec4i> linesPCoords, linesPHV;
 
-        HoughLinesP(dst, linesPCoords, 1, CV_PI/180, 100, 80, 20); // runs the actual detection
-
-        // HoughLinesP(dst, linesPCoords, 0.1, CV_PI/1800, 1, 130, 24);
-
-        Lines lines(linesPCoords);
-        // lines.print();
-
-        Lines filteredLines = lines.GetHVlines();
-        filteredLines.print();
-
-        /* Draw the lines */
-        for(auto line : lines.linesvec)
+        int length = 130;
+        int gap = 24;
+        for (;;)
         {
-            line.print();
-            line.draw(cdstP, 255, 150, 0);
+            char btn = cv::waitKey(0);
+            std::cout << "length " << length << std::endl;
+            std::cout << "gap " <<  gap << std::endl;
+            if (btn == 'w') {
+                length-=10;
+            }
+            if (btn == 'q') {
+                gap-=2;
+            }
+            HoughLinesP(dst, linesPCoords, 1, CV_PI/180, 100, length, gap); // runs the actual detection
+
+            // HoughLinesP(dst, linesPCoords, 0.1, CV_PI/1800, 1, 130, 24);
+
+            Lines lines(linesPCoords);
+            // lines.print();
+
+            Lines filteredLines = lines.GetHVlines();
+            // filteredLines.print();
+
+            /* Draw the lines */
+            for(auto line : lines.linesvec)
+            {
+                // line.print();
+                line.draw(cdstP, 255, 150, 0);
+            }
+            for(auto line : filteredLines.linesvec)
+            {
+                line.draw(cdstP, 255, 0, 0);
+            }
+            frame_width = cdstP.cols;
+            frame_height = cdstP.rows;
+            float scaleEnd =  1080. / frame_height;
+            cv::resize(cdstP, cdstP, cv::Size(static_cast<std::size_t>(frame_width * scaleEnd), static_cast<std::size_t>(frame_height * scaleEnd)));
+            for(auto line : filteredLines.linesvec)
+            {
+                line.draw(cdstP, 255, 0, 0);
+            }
+            cv::imshow("Detected Lines (in red) - Probabilistic Line Transform", cdstP);
         }
-        for(auto line : filteredLines.linesvec)
-        {
-            line.draw(cdstP, 255, 0, 0);
-        }
-        
-        // cv::imshow("Detected Lines (in red) - Probabilistic Line Transform", cdstP);
-        // cv::waitKey();
         return cdstP;
     }
 }

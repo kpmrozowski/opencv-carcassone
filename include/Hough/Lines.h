@@ -57,10 +57,10 @@ public:
             }
         }
         (*(histogram.end() - 1)).first = -90.;
-        std::cout << std::endl << "Histogram:" << std::endl;
-        for (int i = 0; i < segments; i++) {
-            std::cout << "i: " << i << "\tangle: " << histogram[i].first << "\tcount: " << histogram[i].second << std::endl;
-        }
+        // std::cout << std::endl << "Histogram:" << std::endl;
+        // for (int i = 0; i < segments; i++) {
+        //     std::cout << "i: " << i << "\tangle: " << histogram[i].first << "\tcount: " << histogram[i].second << std::endl;
+        // }
         return histogram;
     }
 
@@ -78,8 +78,8 @@ public:
         hist1.insert(std::end(hist1), std::begin(hist3), std::end(hist3));
         auto it1 = std::max_element(hist1.begin(), hist1.end(), [](const auto& lhs, const auto& rhs) { return lhs.second < rhs.second; });
         auto it2 = std::max_element(hist2.begin(), hist2.end(), [](const auto& lhs, const auto& rhs) { return lhs.second < rhs.second; });
-        std::cout << "pivot_angle1: " << (*it1).first << std::endl;
-        std::cout << "pivot_angle2: " << (*it2).first << std::endl;
+        // std::cout << "pivot_angle1: " << (*it1).first << std::endl;
+        // std::cout << "pivot_angle2: " << (*it2).first << std::endl;
 
         for (std::size_t i = 0; i < linesvec.size(); i++) {
             if (linesvec[i].angle > (*it1).first && linesvec[i].angle < (*it1).first + 180/length) {
