@@ -90,6 +90,17 @@ public:
         }
         return filteredLines;
     }
+    Lines GetHVlinesSimple(int tolerance) {
+        Lines filteredLines;
+        for (std::size_t i = 0; i < linesvec.size(); i++) {
+            if (linesvec[i].angle > (90 - tolerance)
+                || linesvec[i].angle < (-90 + tolerance)
+                || linesvec[i].angle < tolerance && linesvec[i].angle > -tolerance) {
+                    filteredLines.linesvec.push_back(this->linesvec[i]);
+            }
+        }
+        return filteredLines;
+    }
 };
 
 #endif
