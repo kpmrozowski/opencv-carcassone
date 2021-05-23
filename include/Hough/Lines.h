@@ -15,6 +15,7 @@ using Histogram = std::vector<std::pair<pivot_angle, count>>;
 class Lines
 {
 public:
+    std::vector<Square> m_squares;
     std::vector<std::pair<Line,Line>> m_pararrel_pairs;
     std::vector<Line> m_linesvec;
     Lines(){}
@@ -134,17 +135,75 @@ public:
         }
         return filteredLines;
     }
-    std::vector<Square> getSquares(std::vector<std::pair<Line, Line>> linePairs, double minSize = 10) {
+    std::vector<Square> getSquares(double diagAngleTolerance = 5) {
         std::vector<Square> squares;
 
-        for (size_t i = 0; i < linePairs.size(); i++) {
-            for (size_t j = i + 1; j < linePairs.size(); j++) {
-                if (linePairs[i].first.isVertical() != linePairs[j].first.isVertical()) {
-                    // linePairs[i].first.m_coords[2] - 
-                    std::pair<double, double> d1 =
-                        std::make_pair(linePairs[i].first.m_coords[0], linePairs[j].first.m_coords[1]);
-                    std::pair<double, double> d2 =
-                        std::make_pair(linePairs[i].first.m_coords[2], linePairs[j].first.m_coords[3]);
+        for (size_t i = 0; i < m_pararrel_pairs.size(); i++) {
+            for (size_t j = i + 1; j < m_pararrel_pairs.size(); j++) {
+                Point NW, NE, SW, SE;
+                if (m_pararrel_pairs[i].first.isVertical() != m_pararrel_pairs[j].first.isVertical()) {
+                    if (m_pararrel_pairs[i].first.isVertical()) {
+                        if (m_pararrel_pairs[i].first.m_coords[0] < m_pararrel_pairs[i].second.m_coords[0]) {
+                            if (m_pararrel_pairs[j].first.m_coords[1] > m_pararrel_pairs[j].second.m_coords[1]) {
+                                NW = Point(m_pararrel_pairs[i].first.m_coords[0], m_pararrel_pairs[j].first.m_coords[1]);
+                                NE = Point(m_pararrel_pairs[i].second.m_coords[0], m_pararrel_pairs[j].first.m_coords[1]);
+                                SW = Point(m_pararrel_pairs[i].first.m_coords[0], m_pararrel_pairs[j].second.m_coords[1]);
+                                SE = Point(m_pararrel_pairs[i].second.m_coords[0], m_pararrel_pairs[j].second.m_coords[1]);
+                            } else {
+                                NW = Point(m_pararrel_pairs[i].first.m_coords[0], m_pararrel_pairs[j].second.m_coords[1]);
+                                NE = Point(m_pararrel_pairs[i].second.m_coords[0], m_pararrel_pairs[j].second.m_coords[1]);
+                                SW = Point(m_pararrel_pairs[i].first.m_coords[0], m_pararrel_pairs[j].first.m_coords[1]);
+                                SE = Point(m_pararrel_pairs[i].second.m_coords[0], m_pararrel_pairs[j].first.m_coords[1]);
+                            }
+                        } else {
+                            if (m_pararrel_pairs[j].first.m_coords[1] > m_pararrel_pairs[j].second.m_coords[1]) {
+                                NW = Point(m_pararrel_pairs[i].second.m_coords[0], m_pararrel_pairs[j].first.m_coords[1]);
+                                NE = Point(m_pararrel_pairs[i].first.m_coords[0], m_pararrel_pairs[j].first.m_coords[1]);
+                                SW = Point(m_pararrel_pairs[i].second.m_coords[0], m_pararrel_pairs[j].second.m_coords[1]);
+                                SE = Point(m_pararrel_pairs[i].first.m_coords[0], m_pararrel_pairs[j].second.m_coords[1]);
+                            } else {
+                                NW = Point(m_pararrel_pairs[i].second.m_coords[0], m_pararrel_pairs[j].second.m_coords[1]);
+                                NE = Point(m_pararrel_pairs[i].first.m_coords[0], m_pararrel_pairs[j].second.m_coords[1]);
+                                SW = Point(m_pararrel_pairs[i].second.m_coords[0], m_pararrel_pairs[j].first.m_coords[1]);
+                                SE = Point(m_pararrel_pairs[i].first.m_coords[0], m_pararrel_pairs[j].first.m_coords[1]);
+                            }
+                        }
+                    } else {
+                        if (m_pararrel_pairs[j].first.m_coords[0] < m_pararrel_pairs[j].second.m_coords[0]) {
+                            if (m_pararrel_pairs[i].first.m_coords[1] > m_pararrel_pairs[i].second.m_coords[1]) {
+                                NW = Point(m_pararrel_pairs[j].first.m_coords[0], m_pararrel_pairs[i].first.m_coords[1]);
+                                NE = Point(m_pararrel_pairs[j].second.m_coords[0], m_pararrel_pairs[i].first.m_coords[1]);
+                                SW = Point(m_pararrel_pairs[j].first.m_coords[0], m_pararrel_pairs[i].second.m_coords[1]);
+                                SE = Point(m_pararrel_pairs[j].second.m_coords[0], m_pararrel_pairs[i].second.m_coords[1]);
+                            } else {
+                                NW = Point(m_pararrel_pairs[j].first.m_coords[0], m_pararrel_pairs[i].second.m_coords[1]);
+                                NE = Point(m_pararrel_pairs[j].second.m_coords[0], m_pararrel_pairs[i].second.m_coords[1]);
+                                SW = Point(m_pararrel_pairs[j].first.m_coords[0], m_pararrel_pairs[i].first.m_coords[1]);
+                                SE = Point(m_pararrel_pairs[j].second.m_coords[0], m_pararrel_pairs[i].first.m_coords[1]);
+                            }
+                        } else {
+                            if (m_pararrel_pairs[i].first.m_coords[1] > m_pararrel_pairs[i].second.m_coords[1]) {
+                                NW = Point(m_pararrel_pairs[j].second.m_coords[0], m_pararrel_pairs[i].first.m_coords[1]);
+                                NE = Point(m_pararrel_pairs[j].first.m_coords[0], m_pararrel_pairs[i].first.m_coords[1]);
+                                SW = Point(m_pararrel_pairs[j].second.m_coords[0], m_pararrel_pairs[i].second.m_coords[1]);
+                                SE = Point(m_pararrel_pairs[j].first.m_coords[0], m_pararrel_pairs[i].second.m_coords[1]);
+                            } else {
+                                NW = Point(m_pararrel_pairs[j].second.m_coords[0], m_pararrel_pairs[i].second.m_coords[1]);
+                                NE = Point(m_pararrel_pairs[j].first.m_coords[0], m_pararrel_pairs[i].second.m_coords[1]);
+                                SW = Point(m_pararrel_pairs[j].second.m_coords[0], m_pararrel_pairs[i].first.m_coords[1]);
+                                SE = Point(m_pararrel_pairs[j].first.m_coords[0], m_pararrel_pairs[i].first.m_coords[1]);
+                            }
+                        }
+                    }
+                    double scalar_product = abs((NW.x - SE.x) * (NE.x - SW.x) + (NW.y - SE.y) * (NE.y - SW.y));
+                    double len_diag1 = sqrt(pow(NW.x - SE.x, 2) + pow(NW.y - SE.y, 2));
+                    double len_diag2 = sqrt(pow(NE.x - SW.x, 2) + pow(NE.y - SW.y, 2));
+                    double diag_angle = scalar_product / (len_diag1 * len_diag2);
+                    if (diag_angle / M_PI * 180 - 90 < diagAngleTolerance) {
+                        if (true) {
+                            m_squares.push_back(Square(NW, NE, SW, SE));
+                        }
+                    }
                 }
             }
         }

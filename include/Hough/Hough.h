@@ -92,6 +92,7 @@ cv::Mat detect_liness(const char* filename) {
         // lines.print();
 
         Lines filteredLines = lines.GetHVlinesSimple(5);
+        std::vector<Square> filteredSquares = lines.getSquares(5);
         // filteredLines.print();
 
         /* Draw the lines */
@@ -99,10 +100,15 @@ cv::Mat detect_liness(const char* filename) {
         {
             line.draw(cdstP, 0, 0, 255);
         }
-        for(auto line : filteredLines.m_linesvec)
+        // for(auto line : filteredLines.m_linesvec)
+        // {
+        //     line.print();
+        //     line.draw(cdstP, 255, 0, 0);
+        // }
+        for(auto square : filteredSquares)
         {
-            line.print();
-            line.draw(cdstP, 255, 0, 0);
+            square.print();
+            square.draw(cdstP, 255, 255, 0);
         }
         int frame_width = cdstP.cols;
 	    int frame_height = cdstP.rows;
