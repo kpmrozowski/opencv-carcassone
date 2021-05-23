@@ -92,7 +92,10 @@ cv::Mat detect_liness(const char* filename) {
         // lines.print();
 
         Lines filteredLines = lines.GetHVlinesSimple(5);
-        std::vector<Square> filteredSquares = lines.getSquares(5);
+        lines.findPairs();
+        std::cout << "m_pararrel_pairs.size = " << lines.m_pararrel_pairs.size() << std::endl;
+        std::vector<Square> filteredSquares = lines.getSquares();
+        std::cout << "filteredSquares.size = " << filteredSquares.size() << std::endl;
         // filteredLines.print();
 
         /* Draw the lines */
