@@ -2,6 +2,8 @@
 #define LINES_H
 
 #include "Line.h"
+#include "Square.h"
+
 #include  <limits>
 #include <tuple>
 using size_t = std::size_t;
@@ -131,6 +133,21 @@ public:
             }
         }
         return filteredLines;
+    }
+    std::vector<Square> getSquares(std::vector<std::pair<Line, Line>> linePairs, double minSize = 10) {
+        std::vector<Square> squares;
+        for (size_t i = 0; i < linePairs.size(); i++) {
+            for (size_t j = i + 1; j < linePairs.size(); j++) {
+                if (linePairs[i].first.isVertical() != linePairs[j].first.isVertical()) {
+                    linePairs[i].first.m_coords[2] - 
+                    std::pair<double, double> d1 =
+                        std::make_pair(linePairs[i].first.coords[0], linePairs[j].first.coords[1]);
+                    std::pair<double, double> d2 =
+                        std::make_pair(linePairs[i].first.coords[2], linePairs[j].first.coords[3]);
+                }
+            }
+        }
+        return squares;
     }
 };
 
