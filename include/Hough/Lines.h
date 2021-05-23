@@ -18,10 +18,10 @@ public:
     std::vector<std::pair<Line,Line>> m_pararrel_pairs;
     std::vector<Line> m_linesvec;
     Lines(){}
-    Lines(std::vector<cv::Vec4i>& linesCoords)
+    Lines(std::vector<cv::Vec4i>& linesm_coords)
     {
-        m_linesvec.reserve(linesCoords.size());
-        for (auto lc : linesCoords) {
+        m_linesvec.reserve(linesm_coords.size());
+        for (auto lc : linesm_coords) {
             m_linesvec.push_back(Line(lc));
         }
         sortByAngles();
@@ -136,14 +136,15 @@ public:
     }
     std::vector<Square> getSquares(std::vector<std::pair<Line, Line>> linePairs, double minSize = 10) {
         std::vector<Square> squares;
+
         for (size_t i = 0; i < linePairs.size(); i++) {
             for (size_t j = i + 1; j < linePairs.size(); j++) {
                 if (linePairs[i].first.isVertical() != linePairs[j].first.isVertical()) {
-                    linePairs[i].first.m_coords[2] - 
+                    // linePairs[i].first.m_coords[2] - 
                     std::pair<double, double> d1 =
-                        std::make_pair(linePairs[i].first.coords[0], linePairs[j].first.coords[1]);
+                        std::make_pair(linePairs[i].first.m_coords[0], linePairs[j].first.m_coords[1]);
                     std::pair<double, double> d2 =
-                        std::make_pair(linePairs[i].first.coords[2], linePairs[j].first.coords[3]);
+                        std::make_pair(linePairs[i].first.m_coords[2], linePairs[j].first.m_coords[3]);
                 }
             }
         }
