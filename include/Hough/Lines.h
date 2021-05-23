@@ -12,6 +12,7 @@ using Histogram = std::vector<std::pair<pivot_angle, count>>;
 class Lines
 {
 public:
+    std::vector<std::pair<Line,Line>> m_pararrel_pairs;
     std::vector<Line> m_linesvec;
     Lines(){}
     Lines(std::vector<cv::Vec4i>& linesCoords)
@@ -43,19 +44,27 @@ public:
         }
     }
 
-    std::vector<std::pair<Line,Line>> findPairs (double angle_tollerance) {
-        std::vector<std::pair<Line,Line>> pairs;
+    void findPairs (double angle_tollerance, double min_dist, double max_dist) {
         // m_linesvec
         for (size_t i = 0; i < m_linesvec.size(); i++) {
-            double a = m_linesvec[i].m_coords[3] - m_linesvec[i].m_coords[1];
-            double b = m_linesvec[i].m_coords[2] - m_linesvec[i].m_coords[0];;
-            // double c = (m_linesvec[i].m_coords);
+            double x1 = m_linesvec[i].m_coords[0];
+            double y1 = m_linesvec[i].m_coords[1];
+            double x2 = m_linesvec[i].m_coords[2];
+            double y2 = m_linesvec[i].m_coords[3];
+            double a = y2 - y1;
+            double b = x2 - x1;
+            double c = (x1 - x2) * y2 + (y1 - y2) * x2; 
             for (size_t j = i + 1; j < m_linesvec.size(); j++) {
-                if (abs(m_linesvec[i].m_angle - m_linesvec[j].m_angle) < angle_tollerance)
-                    pairs.push_back(std::make_pair(m_linesvec[i], m_linesvec[j]));
+                double x0 = (m_linesvec[j].m_coords[0] + m_linesvec[j].m_coords[2]) / 2;
+                double y0 = (m_linesvec[j].m_coords[1] + m_linesvec[j].m_coords[3]) / 2;
+                double d = abs(a * x0 + b * y0 + c) / sqrt(pow(a, 2) + pow(b, 2));
+                bool cond1 = abs(m_linesvec[i].m_angle - m_linesvec[j].m_angle) < angle_tollerance;
+                bool cond2a = d > min_dist;
+                bool cond2b = d < max_dist;
+                if (cond1 && cond2a && cond2b)
+                    m_pararrel_pairs.push_back(std::make_pair(m_linesvec[i], m_linesvec[j++]));
             }
         }
-        return std::vector<std::pair<Line,Line>>(); 
     }
 
     Histogram getAngleHistogram(int segments) {
