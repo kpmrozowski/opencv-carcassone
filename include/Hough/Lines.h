@@ -108,22 +108,11 @@ public:
     }
     Lines GetHVlinesSimple(int tolerance) {
         Lines filteredLines;
-        for (std::size_t i = 0; i < linesvec.size(); i++) {
-            if (linesvec[i].angle > (90 - tolerance)
-                || linesvec[i].angle < (-90 + tolerance)
-                || linesvec[i].angle < tolerance && linesvec[i].angle > -tolerance) {
-                    filteredLines.linesvec.push_back(this->linesvec[i]);
-            }
-        }
-        return filteredLines;
-    }
-    Lines GetHVlinesSimple(int tolerance) {
-        Lines filteredLines;
-        for (std::size_t i = 0; i < linesvec.size(); i++) {
-            if (linesvec[i].angle > (90 - tolerance)
-                || linesvec[i].angle < (-90 + tolerance)
-                || linesvec[i].angle < tolerance && linesvec[i].angle > -tolerance) {
-                    filteredLines.linesvec.push_back(this->linesvec[i]);
+        for (std::size_t i = 0; i < m_linesvec.size(); i++) {
+            if (m_linesvec[i].m_angle > (90 - tolerance)
+                || m_linesvec[i].m_angle < (-90 + tolerance)
+                || m_linesvec[i].m_angle < tolerance && m_linesvec[i].m_angle > -tolerance) {
+                    filteredLines.m_linesvec.push_back(this->m_linesvec[i]);
             }
         }
         return filteredLines;

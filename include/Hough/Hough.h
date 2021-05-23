@@ -39,7 +39,7 @@ cv::Mat detect_liness(const char* filename) {
     if (false)
         Canny(src, dst, 50, 100, 3, true);
     else 
-        Canny(src, dst, 9000, 9000, 7, true);
+        Canny(src, dst, 8000, 8000, 7, true);
     
     /* Copy edges to the images that will display the results in BGR */
     cvtColor(dst, cdst, cv::COLOR_GRAY2BGR);
@@ -109,8 +109,8 @@ cv::Mat detect_liness(const char* filename) {
         float scale = 1080. / frame_height;
         cv::resize(cdstP, cdstP, cv::Size(static_cast<std::size_t>(frame_width * scale), static_cast<std::size_t>(frame_height * scale)));
         
-        // cv::imshow("Detected Lines (in red) - Probabilistic Line Transform", cdstP);
-        // cv::waitKey();
+        cv::imshow("Detected Lines (in red) - Probabilistic Line Transform", cdstP);
+        cv::waitKey();
         return cdstP;
     }
 }
