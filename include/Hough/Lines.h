@@ -33,9 +33,16 @@ public:
         return m_linesvec[index];
     }
 
-    // [[nodiscard]] std::tuple<double, double, double> constexpr cartesianToGeneral(Line l) {
-
-    // }
+    [[nodiscard]] inline std::tuple<double, double, double> cartesianToGeneral(const Line &l) {
+        double x1 = l.m_coords[0];
+        double y1 = l.m_coords[1];
+        double x2 = l.m_coords[2];
+        double y2 = l.m_coords[3];
+        double a = y2 - y1;
+        double b = x2 - x1;
+        double c = (x1 - x2) * y2 + (y1 - y2) * x2; 
+        return std::make_tuple(a, b, c);
+    }
 
     void sortByAngles() {
         std::sort(m_linesvec.begin(), m_linesvec.end(), [](const Line& l1, const Line& l2) -> bool
@@ -50,15 +57,9 @@ public:
     }
 
     void findPairs (double angle_tollerance, double min_dist, double max_dist) {
-        // m_linesvec
         for (size_t i = 0; i < m_linesvec.size(); i++) {
-            double x1 = m_linesvec[i].m_coords[0];
-            double y1 = m_linesvec[i].m_coords[1];
-            double x2 = m_linesvec[i].m_coords[2];
-            double y2 = m_linesvec[i].m_coords[3];
-            double a = y2 - y1;
-            double b = x2 - x1;
-            double c = (x1 - x2) * y2 + (y1 - y2) * x2; 
+            double a, b, c;
+            std::tie(a, b, c) = cartesianToGeneral(m_linesvec[i]);
             for (size_t j = i + 1; j < m_linesvec.size(); j++) {
                 double x0 = (m_linesvec[j].m_coords[0] + m_linesvec[j].m_coords[2]) / 2;
                 double y0 = (m_linesvec[j].m_coords[1] + m_linesvec[j].m_coords[3]) / 2;
