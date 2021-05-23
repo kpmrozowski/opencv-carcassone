@@ -1,8 +1,13 @@
+cmake_minimum_required(VERSION 3.9)
 set(CMAKE_CXX_STANDARD 17)
 # set(CMAKE_BUILD_TYPE Debug)
 project( TWM )
 find_package( OpenCV REQUIRED )
+add_subdirectory(deps/gtest)
+add_subdirectory(deps/mb)
+add_subdirectory(deps/fmt)
 include_directories( ${OpenCV_INCLUDE_DIRS} )
+add_compile_options(-fconcepts)
 
 include_directories(include)
 

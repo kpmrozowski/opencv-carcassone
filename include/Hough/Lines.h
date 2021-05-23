@@ -12,42 +12,58 @@ using Histogram = std::vector<std::pair<pivot_angle, count>>;
 class Lines
 {
 public:
-    std::vector<Line> linesvec;
+    std::vector<Line> m_linesvec;
     Lines(){}
     Lines(std::vector<cv::Vec4i>& linesCoords)
     {
-        linesvec.reserve(linesCoords.size());
+        m_linesvec.reserve(linesCoords.size());
         for (auto lc : linesCoords) {
-            linesvec.push_back(Line(lc));
+            m_linesvec.push_back(Line(lc));
         }
         sortByAngles();
     }
     Line& operator[](int index)
     {
-        if (index >= linesvec.size()) {
+        if (index >= m_linesvec.size()) {
             std::cout << "Lines index out of bound, exiting" << std::endl;
             exit(0);
         }
-        return linesvec[index];
+        return m_linesvec[index];
     }
+
     void sortByAngles() {
-        std::sort(linesvec.begin(), linesvec.end(), [](const Line& l1, const Line& l2) -> bool
-            { return l1.angle > l2.angle; }
+        std::sort(m_linesvec.begin(), m_linesvec.end(), [](const Line& l1, const Line& l2) -> bool
+            { return l1.m_angle > l2.m_angle; }
         );
     }
     void print() {
         std::cout << std::endl << "Lines: " << std::endl;
-        for (auto line : linesvec) {
+        for (auto line : m_linesvec) {
             line.print();
         }
+    }
+
+    std::vector<std::pair<Line,Line>> findPairs (double angle_tollerance) {
+        std::vector<std::pair<Line,Line>> pairs;
+        // m_linesvec
+        for (size_t i = 0; i < m_linesvec.size(); i++) {
+            double a = m_linesvec[i].m_coords[3] - m_linesvec[i].m_coords[1];
+            double b = m_linesvec[i].m_coords[2] - m_linesvec[i].m_coords[0];;
+            // double c = (m_linesvec[i].m_coords);
+            for (size_t j = i + 1; j < m_linesvec.size(); j++) {
+                if (abs(m_linesvec[i].m_angle - m_linesvec[j].m_angle) < angle_tollerance)
+                    pairs.push_back(std::make_pair(m_linesvec[i], m_linesvec[j]));
+            }
+        }
+        return std::vector<std::pair<Line,Line>>(); 
     }
 
     Histogram getAngleHistogram(int segments) {
         Histogram histogram(segments, std::make_pair(-std::numeric_limits<double>::infinity(), 0));
         double pivot_angle = 90 - 180/static_cast<double>(segments);
         size_t pivot_idx = 0;
-        for (int i = 0; i < linesvec.size(); i++) {
-            if (linesvec[i].angle > pivot_angle) {
+        for (int i = 0; i < m_linesvec.size(); i++) {
+            if (m_linesvec[i].m_angle > pivot_angle) {
                 histogram[pivot_idx].second++;
             } else {
                 histogram[pivot_idx].first = pivot_angle;
@@ -81,11 +97,11 @@ public:
         std::cout << "pivot_angle1: " << (*it1).first << std::endl;
         std::cout << "pivot_angle2: " << (*it2).first << std::endl;
 
-        for (std::size_t i = 0; i < linesvec.size(); i++) {
-            if (linesvec[i].angle > (*it1).first && linesvec[i].angle < (*it1).first + 180/length) {
-                filteredLines.linesvec.push_back(linesvec[i]);
-            } else if (linesvec[i].angle > (*it2).first && linesvec[i].angle < (*it2).first + 180/length) {
-                filteredLines.linesvec.push_back(linesvec[i]);
+        for (std::size_t i = 0; i < m_linesvec.size(); i++) {
+            if (m_linesvec[i].m_angle > (*it1).first && m_linesvec[i].m_angle < (*it1).first + 180/length) {
+                filteredLines.m_linesvec.push_back(m_linesvec[i]);
+            } else if (m_linesvec[i].m_angle > (*it2).first && m_linesvec[i].m_angle < (*it2).first + 180/length) {
+                filteredLines.m_linesvec.push_back(m_linesvec[i]);
             }
         }
         return filteredLines;
