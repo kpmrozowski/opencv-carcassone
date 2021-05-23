@@ -3,6 +3,7 @@
 
 #include "Line.h"
 #include  <limits>
+#include <tuple>
 using size_t = std::size_t;
 using vus = std::vector<size_t>;
 using count = size_t;
@@ -31,6 +32,10 @@ public:
         }
         return m_linesvec[index];
     }
+
+    // [[nodiscard]] std::tuple<double, double, double> constexpr cartesianToGeneral(Line l) {
+
+    // }
 
     void sortByAngles() {
         std::sort(m_linesvec.begin(), m_linesvec.end(), [](const Line& l1, const Line& l2) -> bool

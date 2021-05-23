@@ -24,6 +24,9 @@ public:
     {
         calculateAngle(coords);
     }
+    constexpr bool isVertical(double eps = 10) {
+        return abs(m_angle - 90) < eps;
+    }
     void print() {
         std::cout << "x1: " << m_coords[0] << " y1: " << m_coords[1]
             << " x2: " << m_coords[2] << " y2: " << m_coords[3] << " m_angle: " << m_angle << std::endl;
