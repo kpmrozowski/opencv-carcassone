@@ -92,9 +92,9 @@ cv::Mat detect_liness(const char* filename) {
         // lines.print();
 
         Lines filteredLines = lines.GetHVlinesSimple(5);
-        lines.findPairs();
+        filteredLines.findPairs();
         std::cout << "m_pararrel_pairs.size = " << lines.m_pararrel_pairs.size() << std::endl;
-        std::vector<Square> filteredSquares = lines.getSquares();
+        std::vector<Square> filteredSquares = filteredLines.getSquares();
         std::cout << "filteredSquares.size = " << filteredSquares.size() << std::endl;
         // filteredLines.print();
 
@@ -103,11 +103,11 @@ cv::Mat detect_liness(const char* filename) {
         {
             line.draw(cdstP, 0, 0, 255);
         }
-        // for(auto line : filteredLines.m_linesvec)
-        // {
-        //     line.print();
-        //     line.draw(cdstP, 255, 0, 0);
-        // }
+        for(auto line : filteredLines.m_linesvec)
+        {
+            // line.print();
+            line.draw(cdstP, 255, 0, 0);
+        }
         for(auto square : filteredSquares)
         {
             square.print();
