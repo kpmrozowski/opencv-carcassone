@@ -3,6 +3,10 @@
 
 #include "Lines.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctime>
+
 namespace twm::hough {
 
 std::vector<std::string> get_filenames( std::experimental::filesystem::path path ) {
@@ -17,7 +21,14 @@ std::vector<std::string> get_filenames( std::experimental::filesystem::path path
     return filenames;
 }
 
+std::tuple<unsigned char, unsigned char, unsigned char> getColors() {
+    return std::tuple<unsigned char, unsigned char, unsigned char>
+        (rand() % 255 + 1, rand() % 255 + 1, rand() % 255 + 1);
+}
+
+
 cv::Mat detect_liness(const char* filename) {
+
     /* Declare the output variables */
     cv::Mat src, dst, cdst, cdstP;
 
@@ -111,7 +122,9 @@ cv::Mat detect_liness(const char* filename) {
         for(auto square : filteredSquares)
         {
             square.print();
-            square.draw(cdstP, 255, 255, 0);
+            unsigned char R,G,B;
+            std::tie(R,G,B) = getColors();
+            square.draw(cdstP, R, G, B);
         }
         int frame_width = cdstP.cols;
 	    int frame_height = cdstP.rows;

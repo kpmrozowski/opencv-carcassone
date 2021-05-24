@@ -3,6 +3,7 @@
 #include <fmt/core.h>
 
 int main() {
+    srand(time(NULL));
     if (false) {
         cv::Mat img = twm::hough::detect_liness("./sequential/WIN_20210512_15_23_02_Pro.jpg");
     } else {
