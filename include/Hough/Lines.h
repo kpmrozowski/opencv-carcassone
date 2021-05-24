@@ -136,13 +136,14 @@ public:
         }
     }
 
-    std::vector<Square> getSquares(double diagAngleTolerance = 0.00001) {
+    std::vector<Square> getSquares(int HVdistTolerance = 400, double diagAngleTolerance = 10) {
         // std::vector<Square> squares;
 
         for (size_t i = 0; i < m_pararrel_pairs.size(); i++) {
             for (size_t j = i + 1; j < m_pararrel_pairs.size(); j++) {
                 Point NW, NE, SW, SE;
-                double h_dist, v_dist;
+                int h_dist, v_dist;
+                Line N, S, W, E;
                 // std::cout << std::endl << "Vertical and Horizontal?" << (m_pararrel_pairs[i].first.isVertical() != m_pararrel_pairs[j].first.isVertical() ? "yes" : "no") << std::endl;
                 if (m_pararrel_pairs[i].first.isVertical() != m_pararrel_pairs[j].first.isVertical()) {
                     if (m_pararrel_pairs[i].first.isVertical()) {
@@ -153,20 +154,20 @@ public:
                                 NE = Point(m_pararrel_pairs[i].second.m_coords[0], m_pararrel_pairs[j].first.m_coords[1]);
                                 SW = Point(m_pararrel_pairs[i].first.m_coords[0], m_pararrel_pairs[j].second.m_coords[1]);
                                 SE = Point(m_pararrel_pairs[i].second.m_coords[0], m_pararrel_pairs[j].second.m_coords[1]);
-                                // line1 = 
-                                // line2
-                                // line3
-                                // line4
-                                h_dist = abs(m_pararrel_pairs[i].first.m_coords[0] - m_pararrel_pairs[i].first.m_coords[0]);
-                                v_dist = abs(m_pararrel_pairs[j].second.m_coords[1] - m_pararrel_pairs[j].second.m_coords[1]);
+                                N = m_pararrel_pairs[j].first;
+                                E = m_pararrel_pairs[i].second;
+                                S = m_pararrel_pairs[j].second;
+                                W = m_pararrel_pairs[i].first;
                             } else {
                                 // std::cout << "(" << i << "," << j << "): if2 ";
                                 NW = Point(m_pararrel_pairs[i].first.m_coords[0], m_pararrel_pairs[j].second.m_coords[1]);
                                 NE = Point(m_pararrel_pairs[i].second.m_coords[0], m_pararrel_pairs[j].second.m_coords[1]);
                                 SW = Point(m_pararrel_pairs[i].first.m_coords[0], m_pararrel_pairs[j].first.m_coords[1]);
                                 SE = Point(m_pararrel_pairs[i].second.m_coords[0], m_pararrel_pairs[j].first.m_coords[1]);
-                                h_dist = abs(m_pararrel_pairs[i].first.m_coords[0] - m_pararrel_pairs[i].second.m_coords[0]);
-                                v_dist = abs(m_pararrel_pairs[j].second.m_coords[1] - m_pararrel_pairs[j].first.m_coords[1]);
+                                N = m_pararrel_pairs[j].second;
+                                E = m_pararrel_pairs[i].second;
+                                S = m_pararrel_pairs[j].first;
+                                W = m_pararrel_pairs[i].first;
                             }
                         } else {
                             if (m_pararrel_pairs[j].first.m_coords[1] > m_pararrel_pairs[j].second.m_coords[1]) {
@@ -175,12 +176,20 @@ public:
                                 NE = Point(m_pararrel_pairs[i].first.m_coords[0], m_pararrel_pairs[j].first.m_coords[1]);
                                 SW = Point(m_pararrel_pairs[i].second.m_coords[0], m_pararrel_pairs[j].second.m_coords[1]);
                                 SE = Point(m_pararrel_pairs[i].first.m_coords[0], m_pararrel_pairs[j].second.m_coords[1]);
+                                N = m_pararrel_pairs[j].first;
+                                E = m_pararrel_pairs[i].first;
+                                S = m_pararrel_pairs[j].second;
+                                W = m_pararrel_pairs[i].second;
                             } else {
                                 // std::cout << "(" << i << "," << j << "): if4 ";
                                 NW = Point(m_pararrel_pairs[i].second.m_coords[0], m_pararrel_pairs[j].second.m_coords[1]);
                                 NE = Point(m_pararrel_pairs[i].first.m_coords[0], m_pararrel_pairs[j].second.m_coords[1]);
                                 SW = Point(m_pararrel_pairs[i].second.m_coords[0], m_pararrel_pairs[j].first.m_coords[1]);
                                 SE = Point(m_pararrel_pairs[i].first.m_coords[0], m_pararrel_pairs[j].first.m_coords[1]);
+                                N = m_pararrel_pairs[j].second;
+                                E = m_pararrel_pairs[i].first;
+                                S = m_pararrel_pairs[j].first;
+                                W = m_pararrel_pairs[i].second;
                             }
                         }
                     } else {
@@ -191,12 +200,20 @@ public:
                                 NE = Point(m_pararrel_pairs[j].second.m_coords[0], m_pararrel_pairs[i].first.m_coords[1]);
                                 SW = Point(m_pararrel_pairs[j].first.m_coords[0], m_pararrel_pairs[i].second.m_coords[1]);
                                 SE = Point(m_pararrel_pairs[j].second.m_coords[0], m_pararrel_pairs[i].second.m_coords[1]);
+                                N = m_pararrel_pairs[i].first;
+                                E = m_pararrel_pairs[j].second;
+                                S = m_pararrel_pairs[i].second;
+                                W = m_pararrel_pairs[j].first;
                             } else {
                                 // std::cout << "(" << i << "," << j << "): if6 ";
                                 NW = Point(m_pararrel_pairs[j].first.m_coords[0], m_pararrel_pairs[i].second.m_coords[1]);
                                 NE = Point(m_pararrel_pairs[j].second.m_coords[0], m_pararrel_pairs[i].second.m_coords[1]);
                                 SW = Point(m_pararrel_pairs[j].first.m_coords[0], m_pararrel_pairs[i].first.m_coords[1]);
                                 SE = Point(m_pararrel_pairs[j].second.m_coords[0], m_pararrel_pairs[i].first.m_coords[1]);
+                                N = m_pararrel_pairs[i].second;
+                                E = m_pararrel_pairs[j].second;
+                                S = m_pararrel_pairs[i].first;
+                                W = m_pararrel_pairs[j].first;
                             }
                         } else {
                                 // std::cout << "(" << i << "," << j << "): if7 ";
@@ -205,12 +222,20 @@ public:
                                 NE = Point(m_pararrel_pairs[j].first.m_coords[0], m_pararrel_pairs[i].first.m_coords[1]);
                                 SW = Point(m_pararrel_pairs[j].second.m_coords[0], m_pararrel_pairs[i].second.m_coords[1]);
                                 SE = Point(m_pararrel_pairs[j].first.m_coords[0], m_pararrel_pairs[i].second.m_coords[1]);
+                                N = m_pararrel_pairs[i].first;
+                                E = m_pararrel_pairs[j].first;
+                                S = m_pararrel_pairs[i].second;
+                                W = m_pararrel_pairs[j].second;
                             } else {
                                 // std::cout << "(" << i << "," << j << "): if8 ";
                                 NW = Point(m_pararrel_pairs[j].second.m_coords[0], m_pararrel_pairs[i].second.m_coords[1]);
                                 NE = Point(m_pararrel_pairs[j].first.m_coords[0], m_pararrel_pairs[i].second.m_coords[1]);
                                 SW = Point(m_pararrel_pairs[j].second.m_coords[0], m_pararrel_pairs[i].first.m_coords[1]);
                                 SE = Point(m_pararrel_pairs[j].first.m_coords[0], m_pararrel_pairs[i].first.m_coords[1]);
+                                N = m_pararrel_pairs[i].second;
+                                E = m_pararrel_pairs[j].first;
+                                S = m_pararrel_pairs[i].first;
+                                W = m_pararrel_pairs[j].second;
                             }
                         }
                     }
@@ -220,10 +245,13 @@ public:
                     double diag_angle = scalar_product / (len_diag1 * len_diag2);
 
 
-
+                    
+                    h_dist = abs(NW.x - NE.x);
+                    v_dist = abs(SW.y - NW.y);
                     if (diag_angle / M_PI * 180 - 90 < diagAngleTolerance) {
-                        if (true) {
-                            m_squares.push_back(Square(NW, NE, SW, SE));
+                        std::cout << "HVdist = " << h_dist - v_dist << std::endl;
+                        if (abs(h_dist - v_dist) < HVdistTolerance) {
+                            m_squares.push_back(Square(NW, NE, SW, SE, N, E, S, W));
                         }
                     }
                 }
@@ -231,6 +259,73 @@ public:
         }
         return m_squares;
     }
+
+    // void find_squares(cv::Mat& image, std::vector<std::vector<cv::Point> >& squares)
+    // {
+    //     // blur will enhance edge detection
+    //     cv::Mat blurred(image);
+    //     medianBlur(image, blurred, 9);
+
+    //     cv::Mat gray0(blurred.size(), CV_8U), gray;
+    //     std::vector<std::vector<cv::Point> > contours;
+
+    //     // find squares in every color plane of the image
+    //     for (int c = 0; c < 3; c++)
+    //     {
+    //         int ch[] = {c, 0};
+    //         mixChannels(&blurred, 1, &gray0, 1, ch, 1);
+
+    //         // try several threshold levels
+    //         const int threshold_level = 2;
+    //         for (int l = 0; l < threshold_level; l++)
+    //         {
+    //             // Use Canny instead of zero threshold level!
+    //             // Canny helps to catch squares with gradient shading
+    //             if (l == 0)
+    //             {
+    //                 Canny(gray0, gray, 10, 20, 3); // 
+
+    //                 // Dilate helps to remove potential holes between edge segments
+    //                 dilate(gray, gray, cv::Mat(), cv::Point(-1,-1));
+    //             }
+    //             else
+    //             {
+    //                     gray = gray0 >= (l+1) * 255 / threshold_level;
+    //             }
+
+    //             // Find contours and store them in a list
+    //             findContours(gray, contours, cv::RETR_LIST, cv::CHAIN_APPROX_SIMPLE);
+
+    //             // Test contours
+    //             std::vector<cv::Point> approx;
+    //             for (size_t i = 0; i < contours.size(); i++)
+    //             {
+    //                     // approximate contour with accuracy proportional
+    //                     // to the contour perimeter
+    //                     approxPolyDP(cv::Mat(contours[i]), approx, arcLength(cv::Mat(contours[i]), true)*0.02, true);
+
+    //                     // Note: absolute value of an area is used because
+    //                     // area may be positive or negative - in accordance with the
+    //                     // contour orientation
+    //                     if (approx.size() == 4 &&
+    //                             fabs(contourArea(cv::Mat(approx))) > 1000 &&
+    //                             isContourConvex(cv::Mat(approx)))
+    //                     {
+    //                             double maxCosine = 0;
+
+    //                             for (int j = 2; j < 5; j++)
+    //                             {
+    //                                     double cosine = fabs(cv::angle(approx[j%4], approx[j-2], approx[j-1]));
+    //                                     maxCosine = MAX(maxCosine, cosine);
+    //                             }
+
+    //                             if (maxCosine < 0.3)
+    //                                     squares.push_back(approx);
+    //                     }
+    //             }
+    //         }
+    //     }
+    // }
 };
 
 #endif

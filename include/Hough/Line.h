@@ -17,6 +17,7 @@
 class Line
 {
 public:
+    Line() {};
     cv::Vec4i m_coords;
     double m_angle;
     Line(const cv::Vec4i& coords)

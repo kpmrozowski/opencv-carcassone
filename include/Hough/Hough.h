@@ -50,8 +50,9 @@ cv::Mat detect_liness(const char* filename) {
     if (false)
         Canny(src, dst, 50, 100, 3, true);
     else 
-        Canny(src, dst, 8000, 8000, 7, true);
+        Canny(src, dst, 11000, 11000, 7, true);
     
+    dilate(dst, dst, cv::Mat(), cv::Point(-1,-1));
     /* Copy edges to the images that will display the results in BGR */
     cvtColor(dst, cdst, cv::COLOR_GRAY2BGR);
     cdstP = cdst.clone();
@@ -103,11 +104,14 @@ cv::Mat detect_liness(const char* filename) {
         // lines.print();
 
         Lines filteredLines = lines.GetHVlinesSimple(5);
-        filteredLines.findPairs();
-        std::cout << "m_pararrel_pairs.size = " << lines.m_pararrel_pairs.size() << std::endl;
-        std::vector<Square> filteredSquares = filteredLines.getSquares();
-        std::cout << "filteredSquares.size = " << filteredSquares.size() << std::endl;
+        // filteredLines.findPairs();
         // filteredLines.print();
+        // std::cout << "m_pararrel_pairs.size = " << lines.m_pararrel_pairs.size() << std::endl;
+        // std::vector<Square> filteredSquares = filteredLines.getSquares();
+        // std::cout << "filteredSquares.size = " << filteredSquares.size() << std::endl;
+
+        // std::vector<std::vector<cv::Point, cv::Point>> contours;
+        // findContours(dst, contours, cv::RETR_LIST, cv::CHAIN_APPROX_SIMPLE);
 
         /* Draw the lines */
         for(auto line : lines.m_linesvec)
@@ -119,13 +123,13 @@ cv::Mat detect_liness(const char* filename) {
             // line.print();
             line.draw(cdstP, 255, 0, 0);
         }
-        for(auto square : filteredSquares)
-        {
-            square.print();
-            unsigned char R,G,B;
-            std::tie(R,G,B) = getColors();
-            square.draw(cdstP, R, G, B);
-        }
+        // for(auto square : filteredSquares)
+        // {
+        //     square.print();
+        //     unsigned char R,G,B;
+        //     std::tie(R,G,B) = getColors();
+        //     square.draw(cdstP, R, G, B);
+        // }
         int frame_width = cdstP.cols;
 	    int frame_height = cdstP.rows;
         float scale = 1080. / frame_height;
