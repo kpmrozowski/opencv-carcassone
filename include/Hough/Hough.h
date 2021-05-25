@@ -26,6 +26,14 @@ std::tuple<unsigned char, unsigned char, unsigned char> getColors() {
         (rand() % 255 + 1, rand() % 255 + 1, rand() % 255 + 1);
 }
 
+std::vector<cv::Mat> getSquareImages(cv::Mat canvas, std::vector<Square> squares) {
+    std::vector<cv::Mat> squareImages;
+    for (auto square : squares) {
+        cv::Rect roi(square.NW.x, square.NW.y, square.SE.x, square.SE.y);
+        squareImages.push_back(canvas(roi));
+    }
+    return squareImages;
+}
 
 cv::Mat detect_liness(const char* filename) {
 
@@ -136,6 +144,8 @@ cv::Mat detect_liness(const char* filename) {
         cv::resize(cdstP, cdstP, cv::Size(static_cast<std::size_t>(frame_width * scale), static_cast<std::size_t>(frame_height * scale)));
         
         cv::imshow("Detected Lines (in red) - Probabilistic Line Transform", cdstP);
+
+        // std::vector<cv::Mat> squareImages = getSquareImages(cdstP, filteredLines.m_squares);
         cv::waitKey();
         return cdstP;
     }
