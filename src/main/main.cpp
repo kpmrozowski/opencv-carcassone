@@ -34,7 +34,7 @@ int main() {
         for (const auto &im : squareImages) {
             cv::imshow("a", im);
             std::pair<unsigned char, unsigned char> meanHS = colors::getMeanHS(im);
-            std::cout << "meanH: " << meanHS.first << " meanS: " << meanHS.second << std::endl;
+            std::cout << "meanH: " << int(meanHS.first) << " meanS: " << int(meanHS.second) << std::endl;
             cv::waitKey();
         }
         cv::waitKey();

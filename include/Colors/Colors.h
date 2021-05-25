@@ -35,7 +35,6 @@ std::pair<unsigned char, unsigned char> getMeanHS(const cv::Mat& img) {
     }
     meanH = meanH/(img.rows * img.cols);
     meanS = meanS/(img.rows * img.cols);
-    std::cout << "meanH: " << int(meanH) << " meanS: " << int(meanS) << std::endl;
     return std::make_pair(meanH, meanS);
 }
 
