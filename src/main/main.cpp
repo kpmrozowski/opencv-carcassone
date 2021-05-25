@@ -33,7 +33,7 @@ int main() {
         std::cout << "squareImages.size() = " << squareImages.size() << std::endl;
         for (const auto &im : squareImages) {
             cv::imshow("a", im);
-            std::pair<unsigned char, unsigned char> meanHS = Colors::getMeanHS(im);
+            std::pair<unsigned char, unsigned char> meanHS = colors::getMeanHS(im);
             std::cout << "meanH: " << meanHS.first << " meanS: " << meanHS.second << std::endl;
             cv::waitKey();
         }

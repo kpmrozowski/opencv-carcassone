@@ -1,13 +1,25 @@
 #ifndef TWM_COLORS_H
 #define TWM_COLORS_H
-
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
+#include <vector>
 
 #include <iostream>
 
-namespace twm::Colors {
+namespace twm::colors {
+class RegionsOfTiles {
+   int m_rows, m_cols;
+   std::vector<cv::Mat> m_squared_imgs;
+   std::vector< std::vector< cv::Mat > > m_squared_imgs_regions;
+   public:
+   RegionsOfTiles();
+   RegionsOfTiles(const std::vector<cv::Mat> & all_squared_imgs, int rows, int cols);
+   std::vector< std::vector< cv::Rect > > m_tile_regions;
+   [[nodiscard]] std::vector<cv::Mat> splitTile(const cv::Mat &tile) noexcept;
+   void storeSplitedTiles () noexcept;
+};
+
 
 std::pair<unsigned char, unsigned char> getMeanHS(const cv::Mat& img) {
     cv::Mat img_hsv;
@@ -27,8 +39,7 @@ std::pair<unsigned char, unsigned char> getMeanHS(const cv::Mat& img) {
     return std::make_pair(meanH, meanS);
 }
 
-
-} // twm::Colors
+} // twm::colors
 
 #endif // TWM_COLORS_H
 
