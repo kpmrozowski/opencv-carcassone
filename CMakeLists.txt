@@ -12,4 +12,6 @@ add_compile_options(-fconcepts)
 include_directories(include)
 
 add_subdirectory(src/Hough)
+add_subdirectory(src/Colors)
 add_subdirectory(src/Homography)
+add_subdirectory(src/main)
