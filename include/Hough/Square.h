@@ -4,9 +4,9 @@
 #include "Lines.h"
 
 struct Point {
-    double x, y;
+    int x, y;
     Point() : x(0.), y(0.) {}
-    Point(double _x, double _y) : x(_x), y(_y) {}
+    Point(int _x, int _y) : x(_x), y(_y) {}
 };
 
 struct Square {

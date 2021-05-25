@@ -15,7 +15,7 @@ namespace twm::hough {
 using namespace cv;
 using namespace std;
 
-int thresh = 10, N = 30;
+int thresh = 10, N = 20;
 const char* wndname = "Square Detection Demo";
 static void help(const char* programName)
 {
@@ -73,6 +73,8 @@ static void findSquares( const cv::Mat& image, std::vector<std::vector<cv::Point
                 //     tgray(x,y) = gray(x,y) < (l+1)*255/N ? 255 : 0
                 gray = gray0 >= (l+1)*255/N;
             }
+                        // cv::imshow("a", gray);
+                        // cv::waitKey();
             // find contours and store them all as a list
             findContours(gray, contours, RETR_LIST, CHAIN_APPROX_SIMPLE);
             std::vector<cv::Point> approx;

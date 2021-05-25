@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctime>
+#include <cmath>
 
 namespace twm::hough {
 
@@ -26,11 +27,20 @@ std::tuple<unsigned char, unsigned char, unsigned char> getColors() {
         (rand() % 255 + 1, rand() % 255 + 1, rand() % 255 + 1);
 }
 
-std::vector<cv::Mat> getSquareImages(cv::Mat canvas, std::vector<Square> squares) {
+std::vector<cv::Mat> getSquareImages(const cv::Mat &canvas, const std::vector<Square> &squares) {
     std::vector<cv::Mat> squareImages;
     for (auto square : squares) {
-        cv::Rect roi(square.NW.x, square.NW.y, square.SE.x, square.SE.y);
-        squareImages.push_back(canvas(roi));
+        std::vector<int> y_range = std::vector<int>({square.NW.y, square.NE.y, square.SE.y, square.SW.y});
+        std::vector<int> x_range = std::vector<int>({square.NW.x, square.NE.x, square.SE.x, square.SW.x});
+        auto maxX = std::max_element(x_range.begin(), x_range.end());
+        auto minX = std::min_element(x_range.begin(), x_range.end());
+        auto maxY = std::max_element(y_range.begin(), y_range.end());
+        auto minY = std::min_element(y_range.begin(), y_range.end());
+        cv::Rect roi(*minX, *minY, *maxX - *minX, *maxY - *minY);
+        squareImages.push_back(cv::Mat(canvas,roi));
+        std::cout << "canvas.rows = " << canvas.rows << "canvas.cols = " << canvas.cols << std::endl;
+        std::cout << "minX = " << *minX << ", minY = " << *minY << ", maxX = " << *maxX << ", maxY = " << *maxY << std::endl;
+        std::cout << "roi.width = " << roi.width << "roi.height = " << roi.height << std::endl;
     }
     return squareImages;
 }
@@ -145,7 +155,6 @@ cv::Mat detect_liness(const char* filename) {
         
         cv::imshow("Detected Lines (in red) - Probabilistic Line Transform", cdstP);
 
-        // std::vector<cv::Mat> squareImages = getSquareImages(cdstP, filteredLines.m_squares);
         cv::waitKey();
         return cdstP;
     }
