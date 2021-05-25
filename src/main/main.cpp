@@ -37,9 +37,16 @@ int main() {
             std::cout << "meanH: " << int(meanHS.first) << " meanS: " << int(meanHS.second) << std::endl;
             cv::waitKey();
         }
+        for( const auto& name : twm::hough::get_filenames( "tiles" ) ) {
+            std::cout << "./" << name << '\n' ;
+            const char * str = name.c_str();
+            cv::Mat tile = imread(cv::samples::findFile(str), cv::IMREAD_COLOR);
+            std::pair<unsigned char, unsigned char> meanHS = colors::getMeanHS(tile);
+            std::cout << "Tile: meanH: " << int(meanHS.first) << " meanS: " << int(meanHS.second) << std::endl;
+        }
         cv::waitKey();
     } else {
-        for( const auto& name : twm::hough::get_filenames( "sequential" ) ) {
+        for( const auto& name : twm::hough::get_filenames("sequential") ) {
             std::cout << name << '\n' ;
             const char * str = name.c_str();
             cv::Mat img = twm::hough::detect_liness(str);
