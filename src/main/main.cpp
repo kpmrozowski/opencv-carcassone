@@ -3,6 +3,9 @@
 #include <iostream>
 #include <fmt/core.h>
 
+#include <Colors/Colors.h>
+
+using namespace twm;
 
 int main() {
     srand(time(NULL));
@@ -30,9 +33,10 @@ int main() {
         std::cout << "squareImages.size() = " << squareImages.size() << std::endl;
         for (const auto &im : squareImages) {
             cv::imshow("a", im);
+            std::pair<unsigned char, unsigned char> meanHS = Colors::getMeanHS(im);
+            std::cout << "meanH: " << meanHS.first << " meanS: " << meanHS.second << std::endl;
             cv::waitKey();
         }
-        
         cv::waitKey();
     } else {
         for( const auto& name : twm::hough::get_filenames( "sequential" ) ) {
