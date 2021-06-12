@@ -60,7 +60,9 @@ int main() {
         // }
 
         // HOG comparison
+        
         cv::Mat bgx, bgy;
+        std::vector<double> distances;
         for( const auto& name : twm::hough::get_filenames( "../../../../images/tiles" ) ) {
                 std::cout << "./" << name << '\n' ;
                 const char * str = name.c_str();
@@ -87,11 +89,13 @@ int main() {
 
                 hog_vector_detected = classifier.hog(tile);
                 double dist = cv::norm(hog_vector, hog_vector_detected);
+                distances.push_back(dist);
 
                 
                 // std::cout << "dist_x: " << dist_x << " dist_y: " << dist_y << std::endl;
                 std::cout << "dist: " << dist << std::endl;
             }
+
         }
 
 
