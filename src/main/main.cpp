@@ -11,6 +11,15 @@
 
 using namespace twm;
 
+void display(std::string wndName, cv::Mat& img) {
+    int frame_width = img.cols;
+	int frame_height = img.rows;
+    float scale = 1080. / frame_height;
+    cv::resize(img, img, cv::Size(static_cast<std::size_t>(frame_width * scale), static_cast<std::size_t>(frame_height * scale)));
+    imshow(wndName, img);
+}
+// cv::rectangle(img, cv::Point(NW.x, NW.y), cv::Point(SE.x, SE.y), cv::Scalar(B,G,R), 1);
+
 int main() {
     srand(time(NULL));
 
@@ -23,7 +32,7 @@ int main() {
     
     auto mask = utils::color_tresholder(img_orig);
     // Show the frames
-    cv::imshow("mask", mask);
+    // imshow("mask", mask);
     cv::waitKey();
     for (size_t x = 0; x < img_orig2.rows; x++) {
         for (size_t y = 0; y < img_orig2.cols; y++) {
@@ -38,7 +47,7 @@ int main() {
             }
         }
     }
-    cv::imshow("img_orig2", img_orig2);
+    display("img_orig2", img_orig2);
     cv::waitKey();
 
     cv::Mat img_diff;
@@ -78,7 +87,7 @@ int main() {
         float scale = 1080. / frame_height;
         cv::resize(img_new, img_new, cv::Size(static_cast<std::size_t>(frame_width * scale), static_cast<std::size_t>(frame_height * scale)));
 
-        cv::imshow("nowy", img_new);
+        display("nowy", img_new);
         cv::waitKey();
 
 
@@ -87,7 +96,7 @@ int main() {
 
         
         cv::GaussianBlur(img_orig, img, cv::Size(5, 5), 0);
-        cv::imshow("blured", img);
+        display("blured", img);
         // cv::Mat img = img_orig;
         std::vector<std::vector<cv::Point>> foundSquares;
         // twm::hough::findSquares(img, foundSquares);
@@ -104,7 +113,7 @@ int main() {
         }
         polylines(img_orig, foundSquares, true, cv::Scalar(0, 255, 0), 3, cv::LINE_AA);
         std::cout << "squares.size() = " << squares.size() << std::endl;
-        imshow(wndname, img_orig);
+        display(wndname, img_orig);
         cv::waitKey();
         std::vector<cv::Mat> squareImages = twm::hough::getSquareImages(img_orig, squares);
         std::cout << "squareImages.size() = " << squareImages.size() << std::endl;
