@@ -17,6 +17,7 @@ void display(std::string wndName, cv::Mat& img) {
     float scale = 1080. / frame_height;
     cv::resize(img, img, cv::Size(static_cast<std::size_t>(frame_width * scale), static_cast<std::size_t>(frame_height * scale)));
     imshow(wndName, img);
+    cv::waitKey();
 }
 // cv::rectangle(img, cv::Point(NW.x, NW.y), cv::Point(SE.x, SE.y), cv::Scalar(B,G,R), 1);
 
@@ -33,7 +34,7 @@ int main() {
     auto mask = utils::color_tresholder(img_orig);
     // Show the frames
     // imshow("mask", mask);
-    cv::waitKey();
+    // cv::waitKey();
     for (size_t x = 0; x < img_orig2.rows; x++) {
         for (size_t y = 0; y < img_orig2.cols; y++) {
             cv::Vec3b pixel = img_orig2.at<cv::Vec3b>(x,y);
@@ -47,8 +48,7 @@ int main() {
             }
         }
     }
-    display("img_orig2", img_orig2);
-    cv::waitKey();
+    // display("img_orig2", img_orig2);
 
     cv::Mat img_diff;
     cv::absdiff(img_orig2, img_orig, img_diff);
@@ -87,8 +87,8 @@ int main() {
         float scale = 1080. / frame_height;
         cv::resize(img_new, img_new, cv::Size(static_cast<std::size_t>(frame_width * scale), static_cast<std::size_t>(frame_height * scale)));
 
-        display("nowy", img_new);
-        cv::waitKey();
+        // display("nowy", img_new);
+        // cv::waitKey();
 
 
         cv::Mat img;
@@ -96,13 +96,13 @@ int main() {
 
         
         cv::GaussianBlur(img_orig, img, cv::Size(5, 5), 0);
-        display("blured", img);
+        // display("blured", img);
         // cv::Mat img = img_orig;
         std::vector<std::vector<cv::Point>> foundSquares;
         // twm::hough::findSquares(img, foundSquares);
 
 
-        twm::hough::findSquares(img_new, foundSquares);
+        twm::hough::findSquares(img_orig2, foundSquares);
         std::vector<Square> squares;
         for (auto square : foundSquares) {
             std::cout << square[0] << ", " << square[1] << ", " << square[2] << ", " << square[3] << ", " << std::endl;
@@ -111,10 +111,9 @@ int main() {
             s.print();
             s.draw(img, 255, 255, 0);
         }
-        polylines(img_orig, foundSquares, true, cv::Scalar(0, 255, 0), 3, cv::LINE_AA);
+        polylines(img_orig2, foundSquares, true, cv::Scalar(0, 255, 0), 3, cv::LINE_AA);
         std::cout << "squares.size() = " << squares.size() << std::endl;
-        display(wndname, img_orig);
-        cv::waitKey();
+        display(wndname, img_orig2);
         std::vector<cv::Mat> squareImages = twm::hough::getSquareImages(img_orig, squares);
         std::cout << "squareImages.size() = " << squareImages.size() << std::endl;
         twm::colors::Classifier classifier;
@@ -137,8 +136,6 @@ int main() {
 
         
 
-
-        cv::waitKey();
     } else {
         for( const auto& name : twm::hough::get_filenames("sequential") ) {
             std::cout << name << '\n' ;
