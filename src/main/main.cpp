@@ -41,64 +41,67 @@ int main() {
             }
         }
     }
-    if (true) {
-        cv::Mat img_orig = cv::imread( cv::samples::findFile( "../../../../images/game1/20210612_113122.jpg" ), cv::IMREAD_COLOR );
+    // if (true) {
+        for( const auto& name : twm::hough::get_filenames("../../../../images/game1/") ) {
+            std::cout << name << '\n' ;
+            cv::Mat img_orig = cv::imread( cv::samples::findFile( name.c_str() ), cv::IMREAD_COLOR );
 
-        cv::Mat img;
-        cv::GaussianBlur(img_orig, img, cv::Size(5, 5), 0);
-        std::vector<std::vector<cv::Point>> foundSquares;
+            cv::Mat img;
+            cv::GaussianBlur(img_orig, img, cv::Size(5, 5), 0);
+            std::vector<std::vector<cv::Point>> foundSquares;
 
-        twm::hough::findSquares(img_orig2, foundSquares);
-        std::vector<Square> squares;
-        for (auto square : foundSquares) {
-            std::cout << square[0] << ", " << square[1] << ", " << square[2] << ", " << square[3] << ", " << std::endl;
-            Square s = Square(square);
-            squares.push_back(s);
-            s.print();
-            s.draw(img, 255, 255, 0);
+            twm::hough::findSquares(img_orig2, foundSquares);
+            std::vector<Square> squares;
+            for (auto square : foundSquares) {
+                std::cout << square[0] << ", " << square[1] << ", " << square[2] << ", " << square[3] << ", " << std::endl;
+                Square s = Square(square);
+                squares.push_back(s);
+                s.print();
+                s.draw(img, 255, 255, 0);
+            }
+            polylines(img_orig2, foundSquares, true, cv::Scalar(0, 255, 0), 3, cv::LINE_AA);
+            std::cout << "squares.size() = " << squares.size() << std::endl;
+            display(wndname, img_orig2);
+            std::vector<cv::Mat> squareImages = twm::hough::getSquareImages(img_orig, squares);
+            std::cout << "squareImages.size() = " << squareImages.size() << std::endl;
+            twm::colors::Classifier classifier;
+            cv::Mat detected_square;
+
+            for (const auto &im : squareImages) {
+                detected_square = im; // zrobic lepiej, teraz zaklada ze jest jeden kwadrat
+                // cv::imshow("a", im);
+                //cv::waitKey();
+            }
+
+            std::pair<std::string, int> detected_tile_info = classifier.classifyHog(detected_square);
+            std::cout << "Znaleziony obrazek: " << detected_tile_info.first << " " << detected_tile_info.second <<  std::endl;
+
+            using carcassonne::TilePlacement;
+            mb::vector2d<TilePlacement> m_board;
+            std::uint8_t t = 0, rotation = 0;
+            m_board.set(70, 70, TilePlacement{.type = t, .rotation = rotation});
         }
-        polylines(img_orig2, foundSquares, true, cv::Scalar(0, 255, 0), 3, cv::LINE_AA);
-        std::cout << "squares.size() = " << squares.size() << std::endl;
-        display(wndname, img_orig2);
-        std::vector<cv::Mat> squareImages = twm::hough::getSquareImages(img_orig, squares);
-        std::cout << "squareImages.size() = " << squareImages.size() << std::endl;
-        twm::colors::Classifier classifier;
-        cv::Mat detected_square;
-
-        for (const auto &im : squareImages) {
-            detected_square = im; // zrobic lepiej, teraz zaklada ze jest jeden kwadrat
-            // cv::imshow("a", im);
-            //cv::waitKey();
-        }
-
-        std::pair<std::string, int> detected_tile_info = classifier.classifyHog(detected_square);
-        std::cout << "Znaleziony obrazek: " << detected_tile_info.first << " " << detected_tile_info.second <<  std::endl;
-
-        using carcassonne::TilePlacement;
-        mb::vector2d<TilePlacement> m_board;
-        std::uint8_t t = 0, rotation = 0;
-        m_board.set(70, 70, TilePlacement{.type = t, .rotation = rotation});
 
         
 
-    } else {
-        for( const auto& name : twm::hough::get_filenames("sequential") ) {
-            std::cout << name << '\n' ;
-            const char * str = name.c_str();
-            cv::Mat img = twm::hough::detect_liness(str);
+    // } else {
+    //     for( const auto& name : twm::hough::get_filenames("sequential") ) {
+    //         std::cout << name << '\n' ;
+    //         const char * str = name.c_str();
+    //         cv::Mat img = twm::hough::detect_liness(str);
 
-            /* Saving images, to the resources folder */
-            if (false) {
-                std::string saving_path("./output_images/");
-                saving_path.append(name);
-                std::cout << saving_path << std::endl;
-                cv::imwrite(saving_path, img);
-            }
-            // break;
-            int c = cv::waitKey();
-            if( c ==  27 )
-                break;
-        }
-    }
+    //         /* Saving images, to the resources folder */
+    //         if (false) {
+    //             std::string saving_path("./output_images/");
+    //             saving_path.append(name);
+    //             std::cout << saving_path << std::endl;
+    //             cv::imwrite(saving_path, img);
+    //         }
+    //         // break;
+    //         int c = cv::waitKey();
+    //         if( c ==  27 )
+    //             break;
+    //     }
+    // }
     return 0;
 }
