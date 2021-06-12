@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fmt/core.h>
 #include <Colors/ClassifyHOG.h>
+#include <limits>
 
 #include <Colors/Colors.h>
 
@@ -37,66 +38,46 @@ int main() {
         std::vector<cv::Mat> squareImages = twm::hough::getSquareImages(img_orig, squares);
         std::cout << "squareImages.size() = " << squareImages.size() << std::endl;
         twm::colors::Classifier classifier;
-        cv::Mat agx, agy;
-        std::vector<float> hog_vector, hog_vector_detected;
-        cv::Mat tile_detected;
+        cv::Mat detected_square;
+
         for (const auto &im : squareImages) {
-            std::tie(agx, agy) = classifier.hog_sobel(im);
-            hog_vector = classifier.hog(im);
-            tile_detected = im; // zrobic lepiej
-            cv::imshow("a", im);
-            std::pair<unsigned char, unsigned char> meanHS = colors::getMeanHS(im);
-            std::cout << "meanH: " << int(meanHS.first) << " meanS: " << int(meanHS.second) << std::endl;
-            cv::waitKey();
+            // hog_vector = classifier.hog(im);
+            detected_square = im; // zrobic lepiej, teraz zaklada ze jest jeden kwadrat
+            // cv::imshow("a", im);
+            //cv::waitKey();
         }
 
-        // HS comparison
-        // for( const auto& name : twm::hough::get_filenames( "tiles" ) ) {
-        //     std::cout << "./" << name << '\n' ;
-        //     const char * str = name.c_str();
-        //     cv::Mat tile = imread(cv::samples::findFile(str), cv::IMREAD_COLOR);
-        //     std::pair<unsigned char, unsigned char> meanHS = colors::getMeanHS(tile);
-        //     std::cout << "Tile: meanH: " << int(meanHS.first) << " meanS: " << int(meanHS.second) << std::endl;
+        std::pair<std::string, int> detected_tile_info = classifier.classifyHog(detected_square);
+        std::cout << "Znaleziony obrazek: " << detected_tile_info.first << " " << detected_tile_info.second <<  std::endl;
+
+        // // HOG comparison
+        // double min_dist = std::numeric_limits<double>::infinity();
+        // std::pair<std::string, int> detected_tile;
+        // for( const auto& fname : twm::hough::get_filenames( "../../../../images/tiles" ) ) {
+        //         std::cout << "./" << fname << '\n' ;
+        //         const char * fname_cstr = fname.c_str();
+        //         cv::Mat tile = imread(cv::samples::findFile(fname_cstr), cv::IMREAD_COLOR);
+        //     for (int rotation = 0; rotation < 4; ++rotation) {
+        //         // rotate clockwise
+        //         cv::transpose(tile, tile);
+        //         cv::flip(tile, tile, 1);
+        //         int tile_detected_width = tile_detected.cols;
+        //         int tile_detected_height = tile_detected.rows;
+                
+        //         cv::Mat tile_scaled;
+        //         cv::resize(tile, tile_scaled, cv::Size(static_cast<std::size_t>(tile_detected_width), static_cast<std::size_t>(tile_detected_height)));
+
+        //         hog_vector_detected = classifier.hog(tile_scaled);
+        //         double dist = cv::norm(hog_vector, hog_vector_detected);
+        //         if (dist < min_dist) {
+        //             min_dist = dist;
+        //             detected_tile = make_pair(fname, rotation);
+        //         }
+
+        //         std::cout << "dist: " << dist << std::endl;
+        //     }
         // }
 
-        // HOG comparison
-        
-        cv::Mat bgx, bgy;
-        std::vector<double> distances;
-        for( const auto& name : twm::hough::get_filenames( "../../../../images/tiles" ) ) {
-                std::cout << "./" << name << '\n' ;
-                const char * str = name.c_str();
-                cv::Mat tile1 = imread(cv::samples::findFile(str), cv::IMREAD_COLOR);
-            for (int rotation = 0; rotation < 4; ++rotation) {
-                // rotate clockwise
-                cv::transpose(tile1,tile1);
-                cv::flip(tile1,tile1,1);
-                // cv::imshow("rotation", tile1);
-                // cv::waitKey();
-                // int tile_width = tile1.cols;
-                // int tile_height = tile1.rows;
-                int tile_detected_width = tile_detected.cols;
-                int tile_detected_height = tile_detected.rows;
-                
-                // float scale_x = tile_detected_width / tile_width;
-                // float scale_y = tile_detected_width / tile_height;
-                cv::Mat tile;
-                cv::resize(tile1, tile, cv::Size(static_cast<std::size_t>(tile_detected_width), static_cast<std::size_t>(tile_detected_height)));
-                
-                std::tie(bgx, bgy) = classifier.hog_sobel(tile);
-                double dist_x = cv::norm(agx, bgx);
-                double dist_y = cv::norm(agy, bgy);
-
-                hog_vector_detected = classifier.hog(tile);
-                double dist = cv::norm(hog_vector, hog_vector_detected);
-                distances.push_back(dist);
-
-                
-                // std::cout << "dist_x: " << dist_x << " dist_y: " << dist_y << std::endl;
-                std::cout << "dist: " << dist << std::endl;
-            }
-
-        }
 
 
 

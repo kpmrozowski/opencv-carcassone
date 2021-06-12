@@ -10,23 +10,6 @@ namespace twm::colors {
 
 class Classifier {
 public:
-   std::tuple<cv::Mat, cv::Mat> hog_sobel (cv::Mat img) {
-      // C++ gradient calculation.
-      // Read image
-      img.convertTo(img, CV_32F, 1/255.0);
-
-      // Calculate gradients gx, gy
-      cv::Mat gx, gy;
-      cv::Sobel(img, gx, CV_32F, 1, 0, 1);
-      cv::Sobel(img, gy, CV_32F, 0, 1, 1);
-
-      // C++ Calculate gradient magnitude and direction (in degrees)
-      cv::Mat mag, angle;
-      cv::cartToPolar(gx, gy, mag, angle, 1);
-      auto mag_real = mag;
-      auto angle_real = angle;
-      return std::make_tuple(gx, gy);
-   }
 
    std::vector<float> hog (cv::Mat img) {
        //params
@@ -53,6 +36,38 @@ public:
       hog.compute(templ_gray, hog_vector, cv::Size(cellSize.height,cellSize.width), cv::Size( 0, 0 ));
 
       return hog_vector;
+   }
+
+   std::pair<std::string, int> classifyHog(cv::Mat detected_square) {
+      std::vector<float> hog_vector, hog_vector_detected;
+      double min_dist = std::numeric_limits<double>::infinity();
+      std::pair<std::string, int> detected_tile;
+      for( const auto& fname : twm::hough::get_filenames( "../../../../images/tiles" ) ) {
+            std::cout << "./" << fname << '\n' ;
+            const char * fname_cstr = fname.c_str();
+            cv::Mat tile = imread(cv::samples::findFile(fname_cstr), cv::IMREAD_COLOR);
+            for (int rotation = 0; rotation < 4; ++rotation) {
+               // rotate clockwise
+               cv::transpose(tile, tile);
+               cv::flip(tile, tile, 1);
+               int detected_square_width = detected_square.cols;
+               int detected_square_height = detected_square.rows;
+                
+               cv::Mat tile_ref;
+               cv::resize(tile, tile_ref, cv::Size(static_cast<std::size_t>(detected_square_width), static_cast<std::size_t>(detected_square_height)));
+
+               hog_vector = this->hog(detected_square);
+               hog_vector_detected = this->hog(tile_ref);
+               double dist = cv::norm(hog_vector, hog_vector_detected);
+               if (dist < min_dist) {
+                  min_dist = dist;
+                  detected_tile = make_pair(fname, rotation);
+               }
+
+               std::cout << "dist: " << dist << std::endl;
+            }
+      }
+      return detected_tile;
    }
 };
 
