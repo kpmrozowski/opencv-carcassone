@@ -38,9 +38,11 @@ int main() {
         std::cout << "squareImages.size() = " << squareImages.size() << std::endl;
         twm::colors::Classifier classifier;
         cv::Mat agx, agy;
+        std::vector<float> hog_vector, hog_vector_detected;
         cv::Mat tile_detected;
         for (const auto &im : squareImages) {
-            std::tie(agx, agy) = classifier.hog(im);
+            std::tie(agx, agy) = classifier.hog_sobel(im);
+            hog_vector = classifier.hog(im);
             tile_detected = im; // zrobic lepiej
             cv::imshow("a", im);
             std::pair<unsigned char, unsigned char> meanHS = colors::getMeanHS(im);
@@ -79,12 +81,16 @@ int main() {
                 cv::Mat tile;
                 cv::resize(tile1, tile, cv::Size(static_cast<std::size_t>(tile_detected_width), static_cast<std::size_t>(tile_detected_height)));
                 
-                std::tie(bgx, bgy) = classifier.hog(tile);
+                std::tie(bgx, bgy) = classifier.hog_sobel(tile);
                 double dist_x = cv::norm(agx, bgx);
                 double dist_y = cv::norm(agy, bgy);
 
+                hog_vector_detected = classifier.hog(tile);
+                double dist = cv::norm(hog_vector, hog_vector_detected);
+
                 
-                std::cout << "dist_x: " << dist_x << " dist_y: " << dist_y << std::endl;
+                // std::cout << "dist_x: " << dist_x << " dist_y: " << dist_y << std::endl;
+                std::cout << "dist: " << dist << std::endl;
             }
         }
 
