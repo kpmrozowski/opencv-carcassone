@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fmt/core.h>
 #include <Colors/ClassifyHOG.h>
+#include <Carcassonne/Game/Board.h>
 
 #include <Colors/Colors.h>
 
@@ -60,7 +61,7 @@ int main() {
         // }
 
         // HOG comparison
-        
+
         cv::Mat bgx, bgy;
         std::vector<double> distances;
         for( const auto& name : twm::hough::get_filenames( "../../../../images/tiles" ) ) {
@@ -97,6 +98,10 @@ int main() {
             }
 
         }
+        using carcassonne::TilePlacement;
+        mb::vector2d<TilePlacement> m_board;
+        std::uint8_t t = 0, rotation = 0;
+        m_board.set(70, 70, TilePlacement{.type = t, .rotation = rotation});
 
 
 

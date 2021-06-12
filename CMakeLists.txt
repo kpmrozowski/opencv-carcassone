@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.9)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 # set(CMAKE_BUILD_TYPE Debug)
+add_compile_options(-fconcepts)
+set(BUILD_GMOCK OFF)
 project( TWM )
 find_package( OpenCV REQUIRED )
 add_subdirectory(deps/gtest)
@@ -11,6 +13,7 @@ add_compile_options(-fconcepts)
 
 include_directories(include)
 
+add_subdirectory(src/Carcassonne/Game)
 add_subdirectory(src/Colors)
 add_subdirectory(src/Homography)
 add_subdirectory(src/main)
