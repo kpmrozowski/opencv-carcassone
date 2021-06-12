@@ -50,10 +50,6 @@ int main() {
         // cv::Mat img1 = twm::hough::detect_liness("./sequential/WIN_20210512_15_23_02_Pro.jpg");
         cv::Mat img_orig = cv::imread( cv::samples::findFile( "../../../../images/game1/20210612_113122.jpg" ), cv::IMREAD_COLOR );
 
-        // int frame_width = img_orig.cols;
-	    // int frame_height = img_orig.rows;
-        // float scale = 1080. / frame_height;
-        // cv::resize(img_orig, img_orig, cv::Size(static_cast<std::size_t>(frame_width * scale), static_cast<std::size_t>(frame_height * scale)));
 
         cv::Mat img_hsv, img_new;
         cv::cvtColor(img_orig, img_hsv, cv::COLOR_BGR2HSV);
@@ -61,16 +57,26 @@ int main() {
         unsigned int minH = 0.246 * 179;
         unsigned int maxS = 1 * 255;
         unsigned int minS = 0.08 * 255;
-        for (size_t x = 0; x < img_orig.cols; x++) {
-            for (size_t y = 0; y < img_orig.rows; y++) {
+        for (size_t x = 0; x < img_orig.rows; x++) {
+            for (size_t y = 0; y < img_orig.cols; y++) {
                 cv::Vec3b pixel = img_hsv.at<cv::Vec3b>(x,y);
                 if (pixel[0] > maxH || pixel[0] < minH || pixel[1] < minS || pixel[1] > maxS) {
+                    pixel[0] = 0;
+                    pixel[1] = 0;
                     pixel[2] = 0;
+                    img_hsv.at<cv::Vec3b>(x,y) = pixel;
+                    // std::cout << "PixelH: " << static_cast<int>(pixel[0]) << std::endl;
                 }
                 // std::cout << "PixelH: " << static_cast<int>(pixel[0]) << std::endl;
             }
         }
         cv::cvtColor(img_hsv, img_new, cv::COLOR_HSV2BGR);
+
+        int frame_width = img_orig.cols;
+	    int frame_height = img_orig.rows;
+        float scale = 1080. / frame_height;
+        cv::resize(img_new, img_new, cv::Size(static_cast<std::size_t>(frame_width * scale), static_cast<std::size_t>(frame_height * scale)));
+
         cv::imshow("nowy", img_new);
         cv::waitKey();
 
