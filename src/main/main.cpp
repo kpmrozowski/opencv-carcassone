@@ -51,7 +51,6 @@ int main() {
         std::pair<std::string, int> detected_tile_info = classifier.classifyHog(detected_square);
         std::cout << "Znaleziony obrazek: " << detected_tile_info.first << " " << detected_tile_info.second <<  std::endl;
 
-
         using carcassonne::TilePlacement;
         mb::vector2d<TilePlacement> m_board;
         std::uint8_t t = 0, rotation = 0;
