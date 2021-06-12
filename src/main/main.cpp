@@ -7,6 +7,7 @@
 #include <Carcassonne/Game/Board.h>
 
 #include <Colors/Colors.h>
+#include <Utils/rgb2hsv.h>
 
 using namespace twm;
 
@@ -15,6 +16,36 @@ int main() {
 
     int thresh = 50, N = 11;
     const char* wndname = "Square Detection Demo";
+    cv::Mat img_orig = cv::imread( cv::samples::findFile( "../../../../images/game1/20210612_113122.jpg" ), cv::IMREAD_COLOR );
+    // cv::GaussianBlur(img_orig, img_orig, cv::Size(9, 9), 0);
+    cv::Mat img_orig2 = cv::imread( cv::samples::findFile( "../../../../images/game1/20210612_113205.jpg" ), cv::IMREAD_COLOR );
+
+    auto frame_threshold = utils::color_tresholder(img_orig);
+    // Show the frames
+    cv::imshow(wndname, frame_threshold);
+    cv::waitKey();
+
+    // cv::GaussianBlur(img_orig2, img_orig2, cv::Size(9, 9), 0);
+    cv::Mat img_diff;
+    cv::absdiff(img_orig2, img_orig, img_diff);
+    cv::threshold(img_diff, img_diff, 80, 255, cv::THRESH_BINARY);
+    cv::erode(img_diff, img_diff, cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3)));
+    
+    cv::imshow("img_diff", img_diff);
+    cv::waitKey();
+
+
+
+
+
+
+
+
+
+
+
+
+
     if (true) {
         // cv::Mat img1 = twm::hough::detect_liness("./sequential/WIN_20210512_15_23_02_Pro.jpg");
         cv::Mat img_orig = cv::imread( cv::samples::findFile( "../../../../images/game1/20210612_113122.jpg" ), cv::IMREAD_COLOR );
@@ -23,7 +54,8 @@ int main() {
         cv::imshow("blured", img);
         // cv::Mat img = img_orig;
         std::vector<std::vector<cv::Point>> foundSquares;
-        twm::hough::findSquares(img, foundSquares);
+        // twm::hough::findSquares(img, foundSquares);
+        twm::hough::findSquares(img_diff, foundSquares);
         std::vector<Square> squares;
         for (auto square : foundSquares) {
             std::cout << square[0] << ", " << square[1] << ", " << square[2] << ", " << square[3] << ", " << std::endl;
