@@ -2,6 +2,7 @@
 #include <Hough/Squares.h>
 #include <iostream>
 #include <fmt/core.h>
+#include <Colors/ClassifyHOG.h>
 
 #include <Colors/Colors.h>
 
@@ -35,19 +36,70 @@ int main() {
         cv::waitKey();
         std::vector<cv::Mat> squareImages = twm::hough::getSquareImages(img_orig, squares);
         std::cout << "squareImages.size() = " << squareImages.size() << std::endl;
+        twm::colors::Classifier classifier;
+        cv::Mat agx, agy;
+        cv::Mat tile_detected;
         for (const auto &im : squareImages) {
+            std::tie(agx, agy) = classifier.hog(im);
+            tile_detected = im; // zrobic lepiej
             cv::imshow("a", im);
             std::pair<unsigned char, unsigned char> meanHS = colors::getMeanHS(im);
             std::cout << "meanH: " << int(meanHS.first) << " meanS: " << int(meanHS.second) << std::endl;
             cv::waitKey();
         }
-        for( const auto& name : twm::hough::get_filenames( "tiles" ) ) {
-            std::cout << "./" << name << '\n' ;
-            const char * str = name.c_str();
-            cv::Mat tile = imread(cv::samples::findFile(str), cv::IMREAD_COLOR);
-            std::pair<unsigned char, unsigned char> meanHS = colors::getMeanHS(tile);
-            std::cout << "Tile: meanH: " << int(meanHS.first) << " meanS: " << int(meanHS.second) << std::endl;
+
+        // HS comparison
+        // for( const auto& name : twm::hough::get_filenames( "tiles" ) ) {
+        //     std::cout << "./" << name << '\n' ;
+        //     const char * str = name.c_str();
+        //     cv::Mat tile = imread(cv::samples::findFile(str), cv::IMREAD_COLOR);
+        //     std::pair<unsigned char, unsigned char> meanHS = colors::getMeanHS(tile);
+        //     std::cout << "Tile: meanH: " << int(meanHS.first) << " meanS: " << int(meanHS.second) << std::endl;
+        // }
+
+        // HOG comparison
+        cv::Mat bgx, bgy;
+        for( const auto& name : twm::hough::get_filenames( "../../../../images/tiles" ) ) {
+                std::cout << "./" << name << '\n' ;
+                const char * str = name.c_str();
+                cv::Mat tile1 = imread(cv::samples::findFile(str), cv::IMREAD_COLOR);
+            for (int rotation = 0; rotation < 4; ++rotation) {
+                // rotate clockwise
+                cv::transpose(tile1,tile1);
+                cv::flip(tile1,tile1,1);
+                // cv::imshow("rotation", tile1);
+                // cv::waitKey();
+                // int tile_width = tile1.cols;
+                // int tile_height = tile1.rows;
+                int tile_detected_width = tile_detected.cols;
+                int tile_detected_height = tile_detected.rows;
+                
+                // float scale_x = tile_detected_width / tile_width;
+                // float scale_y = tile_detected_width / tile_height;
+                cv::Mat tile;
+                cv::resize(tile1, tile, cv::Size(static_cast<std::size_t>(tile_detected_width), static_cast<std::size_t>(tile_detected_height)));
+                
+                std::tie(bgx, bgy) = classifier.hog(tile);
+                double dist_x = cv::norm(agx, bgx);
+                double dist_y = cv::norm(agy, bgy);
+
+                
+                std::cout << "dist_x: " << dist_x << " dist_y: " << dist_y << std::endl;
+            }
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
         cv::waitKey();
     } else {
         for( const auto& name : twm::hough::get_filenames("sequential") ) {
