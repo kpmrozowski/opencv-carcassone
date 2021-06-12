@@ -43,9 +43,9 @@ int main() {
     using carcassonne::TilePlacement;
     mb::vector2d<TilePlacement> m_board;
 
-    for( size_t img_id = 1; img_id <= 71; img_id++) {
+    for( size_t img_id = 0; img_id < 71; img_id++) {
         // std::cout << name << '\n' ;
-        std::string path = "/media/kmro/WW OD 47-03-21/ADATA/game1";
+        std::string path = "../../../../images/game1/";
         std::string full_path = path + std::to_string(img_id) + std::string(".jpg");
         cv::Mat img_orig = cv::imread( cv::samples::findFile( full_path.c_str() ), cv::IMREAD_COLOR );
         cv::Mat img_orig_masked = copyOneImage(img_orig);
@@ -61,7 +61,7 @@ int main() {
                 }
             }
         }
-        // display("img_orig_masked", img_orig_masked);
+        display("img_orig_masked", img_orig_masked);
         image_orig_masked_old = copyOneImage(img_orig_masked);
 
         // detekcja prostokatow
@@ -103,7 +103,7 @@ int main() {
         // display("MASK INPUT", img_orig);
         cv::Mat mask1 = utils::color_tresholder(image_orig_masked_old);
         mask = copyOneImage(mask1);
-        // cv::imshow("MASK OUTPUT", mask);
+        cv::imshow("MASK OUTPUT", mask);
         cv::waitKey();
     }
    
