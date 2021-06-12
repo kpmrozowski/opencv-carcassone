@@ -15,7 +15,9 @@ int main() {
     if (true) {
         // cv::Mat img1 = twm::hough::detect_liness("./sequential/WIN_20210512_15_23_02_Pro.jpg");
         cv::Mat img_orig = imread( cv::samples::findFile( "./sequential/WIN_20210512_15_23_02_Pro.jpg" ), cv::IMREAD_COLOR );
-        cv::Mat img = img_orig;
+        cv::Mat img;
+        cv::GaussianBlur(img_orig, img, cv::Size(40, 40), 0);
+        // cv::Mat img = img_orig;
         std::vector<std::vector<cv::Point>> foundSquares;
         twm::hough::findSquares(img, foundSquares);
         std::vector<Square> squares;
