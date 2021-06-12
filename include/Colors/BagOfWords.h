@@ -4,8 +4,12 @@
 
 namespace twm::colors {
 
-// cv::GaussianBlur(image, image_blurred_with_3x3_kernel, Size(3, 3), 0);
-
+// cv::SIFT::create 	( 	int  	nfeatures = 0,
+// 		int  	nOctaveLayers = 3,
+// 		double  	contrastThreshold = 0.04,
+// 		double  	edgeThreshold = 10,
+// 		double  	sigma = 1.6 
+// 	);
 } // twm::colors
 
 #endif // TWM_BagOfWords_H
