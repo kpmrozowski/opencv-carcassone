@@ -42,6 +42,9 @@ static double angle( cv::Point pt1, cv::Point pt2, cv::Point pt0 )
 static void findSquares( const cv::Mat& image, std::vector<std::vector<cv::Point> >& squares )
 {
     squares.clear();
+
+    int image_width = image.cols;
+    int image_height = image.rows;
     Mat pyr, timg, gray0(image.size(), CV_8U), gray;
     // down-scale and upscale the image to filter out the noise
     pyrDown(image, pyr, Size(image.cols/2, image.rows/2));
@@ -106,7 +109,9 @@ static void findSquares( const cv::Mat& image, std::vector<std::vector<cv::Point
                     // (all angles are ~90 degree) then write quandrange
                     // vertices to resultant sequence
                     if( maxCosine < 0.05 ){
-                        squares.push_back(approx);
+                        Square sq(approx);
+                        if (std::abs(sq.NW.x - sq.NE.x) < 0.5 * image_width && std::abs(sq.NW.y - sq.SW.y) < 0.5 * image_width)
+                            squares.push_back(approx);
                      }
                 }
             }

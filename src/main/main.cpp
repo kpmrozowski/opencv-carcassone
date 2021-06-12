@@ -14,9 +14,10 @@ int main() {
     const char* wndname = "Square Detection Demo";
     if (true) {
         // cv::Mat img1 = twm::hough::detect_liness("./sequential/WIN_20210512_15_23_02_Pro.jpg");
-        cv::Mat img_orig = imread( cv::samples::findFile( "./sequential/WIN_20210512_15_23_02_Pro.jpg" ), cv::IMREAD_COLOR );
+        cv::Mat img_orig = cv::imread( cv::samples::findFile( "../../../../images/game1/20210612_113122.jpg" ), cv::IMREAD_COLOR );
         cv::Mat img;
-        cv::GaussianBlur(img_orig, img, cv::Size(40, 40), 0);
+        cv::GaussianBlur(img_orig, img, cv::Size(5, 5), 0);
+        cv::imshow("blured", img);
         // cv::Mat img = img_orig;
         std::vector<std::vector<cv::Point>> foundSquares;
         twm::hough::findSquares(img, foundSquares);
@@ -31,6 +32,7 @@ int main() {
         polylines(img_orig, foundSquares, true, cv::Scalar(0, 255, 0), 3, cv::LINE_AA);
         std::cout << "squares.size() = " << squares.size() << std::endl;
         imshow(wndname, img_orig);
+        cv::waitKey();
         std::vector<cv::Mat> squareImages = twm::hough::getSquareImages(img_orig, squares);
         std::cout << "squareImages.size() = " << squareImages.size() << std::endl;
         for (const auto &im : squareImages) {
