@@ -4,6 +4,7 @@
 #include <fmt/core.h>
 #include <Colors/ClassifyHOG.h>
 #include <limits>
+#include <Carcassonne/Game/Board.h>
 
 #include <Colors/Colors.h>
 
@@ -50,45 +51,11 @@ int main() {
         std::pair<std::string, int> detected_tile_info = classifier.classifyHog(detected_square);
         std::cout << "Znaleziony obrazek: " << detected_tile_info.first << " " << detected_tile_info.second <<  std::endl;
 
-        // // HOG comparison
-        // double min_dist = std::numeric_limits<double>::infinity();
-        // std::pair<std::string, int> detected_tile;
-        // for( const auto& fname : twm::hough::get_filenames( "../../../../images/tiles" ) ) {
-        //         std::cout << "./" << fname << '\n' ;
-        //         const char * fname_cstr = fname.c_str();
-        //         cv::Mat tile = imread(cv::samples::findFile(fname_cstr), cv::IMREAD_COLOR);
-        //     for (int rotation = 0; rotation < 4; ++rotation) {
-        //         // rotate clockwise
-        //         cv::transpose(tile, tile);
-        //         cv::flip(tile, tile, 1);
-        //         int tile_detected_width = tile_detected.cols;
-        //         int tile_detected_height = tile_detected.rows;
-                
-        //         cv::Mat tile_scaled;
-        //         cv::resize(tile, tile_scaled, cv::Size(static_cast<std::size_t>(tile_detected_width), static_cast<std::size_t>(tile_detected_height)));
 
-        //         hog_vector_detected = classifier.hog(tile_scaled);
-        //         double dist = cv::norm(hog_vector, hog_vector_detected);
-        //         if (dist < min_dist) {
-        //             min_dist = dist;
-        //             detected_tile = make_pair(fname, rotation);
-        //         }
-
-        //         std::cout << "dist: " << dist << std::endl;
-        //     }
-        // }
-
-
-
-
-
-
-
-
-
-
-
-
+        using carcassonne::TilePlacement;
+        mb::vector2d<TilePlacement> m_board;
+        std::uint8_t t = 0, rotation = 0;
+        m_board.set(70, 70, TilePlacement{.type = t, .rotation = rotation});
 
 
         cv::waitKey();
