@@ -49,7 +49,36 @@ int main() {
     if (true) {
         // cv::Mat img1 = twm::hough::detect_liness("./sequential/WIN_20210512_15_23_02_Pro.jpg");
         cv::Mat img_orig = cv::imread( cv::samples::findFile( "../../../../images/game1/20210612_113122.jpg" ), cv::IMREAD_COLOR );
+
+        // int frame_width = img_orig.cols;
+	    // int frame_height = img_orig.rows;
+        // float scale = 1080. / frame_height;
+        // cv::resize(img_orig, img_orig, cv::Size(static_cast<std::size_t>(frame_width * scale), static_cast<std::size_t>(frame_height * scale)));
+
+        cv::Mat img_hsv, img_new;
+        cv::cvtColor(img_orig, img_hsv, cv::COLOR_BGR2HSV);
+        unsigned int maxH = 0.928 * 179;
+        unsigned int minH = 0.246 * 179;
+        unsigned int maxS = 1 * 255;
+        unsigned int minS = 0.08 * 255;
+        for (size_t x = 0; x < img_orig.cols; x++) {
+            for (size_t y = 0; y < img_orig.rows; y++) {
+                cv::Vec3b pixel = img_hsv.at<cv::Vec3b>(x,y);
+                if (pixel[0] > maxH || pixel[0] < minH || pixel[1] < minS || pixel[1] > maxS) {
+                    pixel[2] = 0;
+                }
+                // std::cout << "PixelH: " << static_cast<int>(pixel[0]) << std::endl;
+            }
+        }
+        cv::cvtColor(img_hsv, img_new, cv::COLOR_HSV2BGR);
+        cv::imshow("nowy", img_new);
+        cv::waitKey();
+
+
         cv::Mat img;
+
+
+        
         cv::GaussianBlur(img_orig, img, cv::Size(5, 5), 0);
         cv::imshow("blured", img);
         // cv::Mat img = img_orig;
@@ -87,6 +116,8 @@ int main() {
         mb::vector2d<TilePlacement> m_board;
         std::uint8_t t = 0, rotation = 0;
         m_board.set(70, 70, TilePlacement{.type = t, .rotation = rotation});
+
+        
 
 
         cv::waitKey();
