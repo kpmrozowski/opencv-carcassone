@@ -1,10 +1,10 @@
 #include <Hough/Hough.h>
 #include <Hough/Squares.h>
 #include <iostream>
-#include <fmt/core.h>
 #include <Colors/ClassifyHOG.h>
 #include <limits>
 #include <Carcassonne/Game/Board.h>
+#include <limits>
 
 #include <Colors/Colors.h>
 #include <Utils/rgb2hsv.h>
@@ -33,15 +33,15 @@ void display(std::string wndName, const cv::Mat& img) {
 
 int main() {
     srand(time(NULL));
-    int thresh = 50, N = 11;
     cv::Mat img_first = cv::imread( cv::samples::findFile( "../../../../images/game1/1.jpg" ), cv::IMREAD_COLOR );
     // Inicjalizacja petli
-    int frame_width = img_first.cols;
-	int frame_height = img_first.rows;
+    unsigned int frame_width = img_first.cols;
+	unsigned int frame_height = img_first.rows;
     cv::Mat mask(frame_height, frame_width, CV_8UC3, cv::Scalar(0, 0, 0));
     cv::Mat image_orig_masked_old;
     using carcassonne::TilePlacement;
     mb::vector2d<TilePlacement> m_board;
+    unsigned int desired_size = std::max(frame_width, frame_height);
 
     for( size_t img_id = 0; img_id < 71; img_id++) {
         // std::cout << name << '\n' ;
@@ -54,21 +54,24 @@ int main() {
                 cv::Vec3b pixel = img_orig_masked.at<cv::Vec3b>(x,y);
                 cv::Vec3b mask_pixel = mask.at<cv::Vec3b>(x,y);
                 if (mask_pixel[0] != 0 || mask_pixel[1] != 0 || mask_pixel[2] != 0) {
-                    pixel[2] = 194; // V
-                    pixel[1] = 194;  // S
                     pixel[0] = 194; // H
+                    pixel[1] = 194;  // S
+                    pixel[2] = 194; // V
                     img_orig_masked.at<cv::Vec3b>(x,y) = pixel;
                 }
             }
         }
-        display("img_orig_masked", img_orig_masked);
+        // display("img_orig_masked", img_orig_masked);
         image_orig_masked_old = copyOneImage(img_orig_masked);
 
         // detekcja prostokatow
         cv::Mat img_blured;
-        cv::GaussianBlur(image_orig_masked_old, img_blured, cv::Size(5, 5), 0);
-        std::vector<std::vector<cv::Point>> foundSquares;
-        twm::hough::findSquares(img_blured, foundSquares);
+        // cv::GaussianBlur(image_orig_masked_old, img_blured, cv::Size(13, 13), 0);
+        // display("findSquares", img_blured);
+        display("findSquares", image_orig_masked_old);
+        // twm::hough::findSquares(img_blured, foundSquares);
+        auto foundSquares = twm::hough::findSquares(image_orig_masked_old, desired_size);
+        std::cout << "foundSquares.size() = " << foundSquares.size() << std::endl;
         std::vector<Square> squares;
         cv::Mat img_orig_polylines = copyOneImage(img_orig);
         for (auto square : foundSquares) { // wiadomo ze bedzie tylko 1 square
@@ -93,6 +96,7 @@ int main() {
         for (const auto &im : squareImages) { // wiadomo ze bedzie tylko 1 square
             detected_square = im;
         }
+        desired_size = (detected_square.cols + detected_square.rows) / 2;
         std::pair<std::string, int> detected_tile_info = classifier.classifyHog(detected_square);
         std::cout << "Znaleziony obrazek: " << detected_tile_info.first << " " << detected_tile_info.second <<  std::endl;
         
@@ -101,10 +105,10 @@ int main() {
         m_board.set(70, 70, TilePlacement{.type = t, .rotation = rotation});
 
         // display("MASK INPUT", img_orig);
-        cv::Mat mask1 = utils::color_tresholder(image_orig_masked_old);
+        cv::Mat mask1 = utils::color_tresholder(img_orig);
         mask = copyOneImage(mask1);
-        cv::imshow("MASK OUTPUT", mask);
-        cv::waitKey();
+        // cv::imshow("MASK OUTPUT", mask);
+        // cv::waitKey();
     }
    
     return 0;

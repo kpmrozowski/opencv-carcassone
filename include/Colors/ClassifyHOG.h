@@ -13,9 +13,9 @@ public:
 
    std::vector<float> hog (cv::Mat img) {
        //params
-    cv::Size cellSize(8,8);
-    int nbins= 9;
-    cv::Size blockSize(2,2);
+    cv::Size cellSize(4,4);
+    int nbins= 11;
+    cv::Size blockSize(8,8);
 
     //my variables
     std::vector<float>hog_vector;
