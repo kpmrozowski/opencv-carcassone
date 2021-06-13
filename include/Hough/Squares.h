@@ -16,13 +16,6 @@ namespace twm::hough {
 using namespace cv;
 using namespace std;
 
-int thresh = 10, nn = 8;
-unsigned int canny_treshold_A = 7000, canny_treshold_B = 7000;
-double contour_area = 10000.;
-double maxCosine_tolerance = 0.1;
-double diag_angle_tollerance = 7.; // stopni
-double sides_diff_tollerance = 10.;
-
 const char* wndname = "Square Detection Demo";
 static void help(const char* programName)
 {
@@ -57,6 +50,12 @@ static std::vector<std::vector<cv::Point> > findSquares( const cv::Mat& image, u
     pyrDown(image, pyr, Size(image.cols/2, image.rows/2));
     pyrUp(pyr, timg, image.size());
     vector<vector<cv::Point> > contours;
+    int thresh = 10, nn = 8;
+    unsigned int canny_treshold_A = 9000, canny_treshold_B = 7000;
+    double contour_area = 10000.;
+    double maxCosine_tolerance = 0.1;
+    double diag_angle_tollerance = 7.; // stopni
+    double sides_diff_tollerance = 10.;
     // find squares in every color plane of the image
     for( int c = 0; c < 3; c++ ) {
         int ch[] = {c, 0};
@@ -188,8 +187,8 @@ static std::vector<std::vector<cv::Point> > findSquares( const cv::Mat& image, u
             std::cout << "DETEKCJA NAWALILA! LUZOWANIE PARAMETROW..." << std::endl; // drukuje natychmiast
             c = 0;
             nn *= 1.2;
-            canny_treshold_A *= 0.85;
-            canny_treshold_B *= 0.85;
+            canny_treshold_A *= 0.9;
+            canny_treshold_B *= 0.95;
             maxCosine_tolerance *= 1.05;
             diag_angle_tollerance *= 1.05;
             sides_diff_tollerance *= 1.2;

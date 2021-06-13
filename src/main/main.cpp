@@ -68,7 +68,8 @@ int main() {
         cv::Mat img_blured;
         // cv::GaussianBlur(image_orig_masked_old, img_blured, cv::Size(13, 13), 0);
         // display("findSquares", img_blured);
-        display("findSquares", image_orig_masked_old);
+        // display("findSquares", image_orig_masked_old);
+        cv::imshow("findSquares", image_orig_masked_old);
         // twm::hough::findSquares(img_blured, foundSquares);
         auto foundSquares = twm::hough::findSquares(image_orig_masked_old, desired_size);
         std::cout << "foundSquares.size() = " << foundSquares.size() << std::endl;
