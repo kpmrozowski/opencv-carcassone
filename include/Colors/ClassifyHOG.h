@@ -61,7 +61,7 @@ public:
                   detected_tile = make_pair(fname, rotation);
                }
 
-               std::cout << "dist: " << dist << std::endl;
+               // std::cout << "dist: " << dist << std::endl;
                // rotate clockwise
                cv::transpose(tile, tile);
                cv::flip(tile, tile, 1);

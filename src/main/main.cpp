@@ -27,7 +27,7 @@ int main() {
     mb::vector2d<TilePlacement> m_board;
     unsigned int desired_size = std::max(frame_width, frame_height);
 
-    for( size_t img_id = 0; img_id < 71; img_id++) {
+    for( size_t img_id = 0; img_id < 72; img_id++) {
         // std::cout << name << '\n' ;
         std::string path = "../../../../images/game2/";
         std::string full_path = path + std::to_string(img_id) + std::string(".jpg");
@@ -60,16 +60,14 @@ int main() {
         std::vector<Square> squares;
         cv::Mat img_orig_polylines = copyOneImage(img_orig);
         for (auto square : foundSquares) { // wiadomo ze bedzie tylko 1 square
-            std::cout << square[0] << ", " << square[1] << ", " << square[2] << ", " << square[3] << ", " << std::endl;
+            // std::cout << square[0] << ", " << square[1] << ", " << square[2] << ", " << square[3] << ", " << std::endl;
             Square s = Square(square);
             squares.push_back(s);
-            s.print();
+            // s.print();
             // s.draw(img_orig_polylines, 255, 255, 0);
         }
         polylines(img_orig_polylines, foundSquares, true, cv::Scalar(0, 255, 0), 3, cv::LINE_AA);
         std::cout << "squares.size() = " << squares.size() << std::endl;
-        const char* wndname = "Square Detection Demo";
-        display(wndname, img_orig_polylines);
 
         // wycinanie wykrytego prostokata
         std::vector<cv::Mat> squareImages = twm::hough::getSquareImages(img_orig, squares);
@@ -84,6 +82,9 @@ int main() {
         desired_size = (detected_square.cols + detected_square.rows) / 2;
         std::pair<std::string, int> detected_tile_info = classifier.classifyHog(detected_square);
         std::cout << "Znaleziony obrazek: " << detected_tile_info.first << " " << detected_tile_info.second <<  std::endl;
+
+        const char* wndname = "Square Detection Demo";
+        display(wndname, img_orig_polylines);
         
         // dodaj kafelek do wirtualnej planszy
         std::uint8_t t = 0, rotation = 0;

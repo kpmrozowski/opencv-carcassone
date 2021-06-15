@@ -37,10 +37,12 @@ std::vector<cv::Mat> getSquareImages(const cv::Mat &canvas, const std::vector<Sq
         auto maxY = std::max_element(y_range.begin(), y_range.end());
         auto minY = std::min_element(y_range.begin(), y_range.end());
         cv::Rect roi(*minX, *minY, *maxX - *minX, *maxY - *minY);
-        squareImages.push_back(cv::Mat(canvas,roi));
-        std::cout << "canvas.rows = " << canvas.rows << "canvas.cols = " << canvas.cols << std::endl;
-        std::cout << "minX = " << *minX << ", minY = " << *minY << ", maxX = " << *maxX << ", maxY = " << *maxY << std::endl;
-        std::cout << "roi.width = " << roi.width << "roi.height = " << roi.height << std::endl;
+        cv::Mat canva(canvas,roi);
+        squareImages.push_back(canva);
+        // std::cout << "canvas.rows = " << canvas.rows << "canvas.cols = " << canvas.cols << std::endl;
+        // std::cout << "minX = " << *minX << ", minY = " << *minY << ", maxX = " << *maxX << ", maxY = " << *maxY << std::endl;
+        // std::cout << "roi.width = " << roi.width << "roi.height = " << roi.height << std::endl;
+
     }
     return squareImages;
 }

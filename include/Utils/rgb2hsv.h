@@ -13,10 +13,10 @@ const int max_value_H = 179;
 const int max_value_S = 255;
 const int max_value_V = 255;
 
-int high_H = max_value_H * 0.3;
+int high_H = max_value_H * 0.4;
 int low_H = max_value_H * 0.05;//0.246;
 int high_S = max_value_S * 1.00;
-int low_S = max_value_S * 0.2;
+int low_S = max_value_S * 0.1;
 int high_V = max_value_V * 1.00;
 int low_V = max_value_V * 0.60;
 
@@ -32,7 +32,7 @@ Mat color_tresholder(const Mat img_in) {
    
    // Zamykanie maski
    int morph_elem = 0;
-   int morph_size = 40;
+   int morph_size = 20;
    int morph_operator = 1;
    int const max_operator = 4;
    int const max_elem = 2;

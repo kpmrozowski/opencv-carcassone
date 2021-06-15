@@ -10,6 +10,7 @@
 #include "opencv2/imgproc.hpp"
 #include "opencv2/imgcodecs.hpp"
 #include "opencv2/highgui.hpp"
+#include <Utils/display.h>
 #include <iostream>
 
 namespace twm::hough {
@@ -39,16 +40,18 @@ static double angle( cv::Point pt1, cv::Point pt2, cv::Point pt0 )
     return (dx1*dx2 + dy1*dy2)/sqrt((dx1*dx1 + dy1*dy1)*(dx2*dx2 + dy2*dy2) + 1e-10);
 }
 // returns sequence of squares detected on the image.
-static std::vector<std::vector<cv::Point> > findSquares( const cv::Mat& image, unsigned int desired_size)
-{
+static std::vector<std::vector<cv::Point> > findSquares( const cv::Mat& image, unsigned int &desired_size) {
     std::vector<std::vector<cv::Point> > squares;
-
     int image_width = image.cols;
     int image_height = image.rows;
+    bool first_tile = desired_size == std::max(image_height, image_width);
+
     Mat pyr, timg, gray0(image.size(), CV_8U), gray;
     // down-scale and upscale the image to filter out the noise
     pyrDown(image, pyr, Size(image.cols/2, image.rows/2));
+    if(first_tile) { display("pyrDown", pyr);    destroyWindow("pyrDown"); }
     pyrUp(pyr, timg, image.size());
+    if(first_tile) { display("pyrUp", timg);    destroyWindow("pyrUp"); }
     vector<vector<cv::Point> > contours;
     int thresh = 10, nn = 8;
     unsigned int canny_treshold_A = 9000, canny_treshold_B = 7000;
@@ -69,9 +72,11 @@ static std::vector<std::vector<cv::Point> > findSquares( const cv::Mat& image, u
                 // and set the lower to 0 (which forces edges merging)
                //  Canny(gray0, gray, 0, thresh, 5);
                 Canny(gray0, gray, canny_treshold_A, canny_treshold_B, 7);
+                if(first_tile) { display("Canny", gray);    destroyWindow("Canny"); }
                 // dilate canny output to remove potential
                 // holes between edge segments
                 dilate(gray, gray, cv::Mat(), cv::Point(-1,-1));
+                if(first_tile) { display("dilate", gray);    destroyWindow("dilate"); }
             } else {
                 // apply threshold if l!=0:
                 //     tgray(x,y) = gray(x,y) < (l+1)*255/nn ? 255 : 0
@@ -146,17 +151,17 @@ static std::vector<std::vector<cv::Point> > findSquares( const cv::Mat& image, u
                 if (std::abs(sq.NW.y - sq.NE.y) > 0.4 * image_width)
                     continue; 
                 // fmt::print("desired_size={}\n", desired_size);
-                if (desired_size != std::max(image_height, image_width)) {
-                    bool cond1 = abs(sq.NW.x - sq.NE.x) < 0.6 * desired_size;
-                    bool cond2 = abs(sq.NW.x - sq.SW.x) < 0.6 * desired_size;
-                    bool cond3 = abs(sq.NW.y - sq.SW.y) < 0.6 * desired_size;
-                    bool cond4 = abs(sq.NW.y - sq.NE.y) < 0.6 * desired_size;
+                if (!first_tile) {
+                    bool cond1 = abs(sq.NW.x - sq.NE.x) < 0.8 * desired_size;
+                    bool cond2 = abs(sq.NW.x - sq.SW.x) < 0.8 * desired_size;
+                    bool cond3 = abs(sq.NW.y - sq.SW.y) < 0.8 * desired_size;
+                    bool cond4 = abs(sq.NW.y - sq.NE.y) < 0.8 * desired_size;
                     if (cond1 && cond2 && cond3 && cond4)
                         continue;
-                    bool cond5 = abs(sq.NW.x - sq.NE.x) > 1.4 * desired_size;
-                    bool cond6 = abs(sq.NW.x - sq.SW.x) > 1.4 * desired_size;
-                    bool cond7 = abs(sq.NW.y - sq.SW.y) > 1.4 * desired_size;
-                    bool cond8 = abs(sq.NW.y - sq.NE.y) > 1.4 * desired_size;
+                    bool cond5 = abs(sq.NW.x - sq.NE.x) > 1.2 * desired_size;
+                    bool cond6 = abs(sq.NW.x - sq.SW.x) > 1.2 * desired_size;
+                    bool cond7 = abs(sq.NW.y - sq.SW.y) > 1.2 * desired_size;
+                    bool cond8 = abs(sq.NW.y - sq.NE.y) > 1.2 * desired_size;
                     if (cond5 || cond6 || cond7 || cond8)
                         continue;
                 }
@@ -165,10 +170,10 @@ static std::vector<std::vector<cv::Point> > findSquares( const cv::Mat& image, u
                 double E = sqrt(pow(sq.SE.x - sq.NE.x, 2) + pow(sq.SE.y - sq.NE.y, 2));
                 double S = sqrt(pow(sq.SW.x - sq.SE.x, 2) + pow(sq.SW.y - sq.SE.y, 2));
                 double W = sqrt(pow(sq.SW.x - sq.NW.x, 2) + pow(sq.SW.y - sq.NW.y, 2));
-                fmt::print("N={:2f} ", N);
-                fmt::print("E={:2f} ", E);
-                fmt::print("S={:2f} ", S);
-                fmt::print("W={:2f}\n", W);
+                // fmt::print("N={:2f} ", N);
+                // fmt::print("E={:2f} ", E);
+                // fmt::print("S={:2f} ", S);
+                // fmt::print("W={:2f}\n", W);
                 bool cond1 = abs(N - E) > sides_diff_tollerance;
                 bool cond2 = abs(E - S) > sides_diff_tollerance;
                 bool cond3 = abs(S - W) > sides_diff_tollerance;
@@ -176,10 +181,10 @@ static std::vector<std::vector<cv::Point> > findSquares( const cv::Mat& image, u
                 if (cond1 || cond2 || cond3 || cond4)
                     continue;
                 squares.push_back(approx);
-                fmt::print("squares.push_back\n");
-                fmt::print("fabs(contourArea(approx))={}\n", fabs(contourArea(approx)));
-                fmt::print("maxCosine={}stopni\n", maxCosine * M_1_PI * 180);
-                fmt::print("diag_angle={}stopni\n", diag_angle * M_1_PI * 180);
+                // fmt::print("squares.push_back\n");
+                // fmt::print("fabs(contourArea(approx))={}\n", fabs(contourArea(approx)));
+                // fmt::print("maxCosine={}stopni\n", maxCosine * M_1_PI * 180);
+                // fmt::print("diag_angle={}stopni\n", diag_angle * M_1_PI * 180);
             }
         }
         if (c == 2 && squares.size() == 0) {
