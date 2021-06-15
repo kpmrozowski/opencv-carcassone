@@ -47,9 +47,6 @@ public:
             const char * fname_cstr = fname.c_str();
             cv::Mat tile = imread(cv::samples::findFile(fname_cstr), cv::IMREAD_COLOR);
             for (int rotation = 0; rotation < 4; ++rotation) {
-               // rotate clockwise
-               cv::transpose(tile, tile);
-               cv::flip(tile, tile, 1);
                int detected_square_width = detected_square.cols;
                int detected_square_height = detected_square.rows;
                 
@@ -65,6 +62,9 @@ public:
                }
 
                std::cout << "dist: " << dist << std::endl;
+               // rotate clockwise
+               cv::transpose(tile, tile);
+               cv::flip(tile, tile, 1);
             }
       }
       return detected_tile;

@@ -8,32 +8,16 @@
 
 #include <Colors/Colors.h>
 #include <Utils/rgb2hsv.h>
+#include <Utils/display.h>
 
 using namespace twm;
-
-cv::Mat copyOneImage(const cv::Mat &origImage) {
-    cv::Mat image;
-    origImage.copyTo(image);
-    return image;
-}
-
-void display(std::string wndName, const cv::Mat& img) {
-    int frame_width = img.cols;
-	int frame_height = img.rows;
-    // float scale = 1080. / frame_height;
-    float scale = 2000. / frame_height;
-    cv::Mat img_copy = copyOneImage(img);
-    cv::resize(img_copy, img_copy, cv::Size(static_cast<std::size_t>(frame_width * scale), static_cast<std::size_t>(frame_height * scale)));
-    imshow(wndName, img_copy);
-    cv::waitKey();
-}
 
 
 // cv::rectangle(img, cv::Point(NW.x, NW.y), cv::Point(SE.x, SE.y), cv::Scalar(B,G,R), 1);
 
 int main() {
     srand(time(NULL));
-    cv::Mat img_first = cv::imread( cv::samples::findFile( "../../../../images/game1/1.jpg" ), cv::IMREAD_COLOR );
+    cv::Mat img_first = cv::imread( cv::samples::findFile( "../../../../images/game2/1.jpg" ), cv::IMREAD_COLOR );
     // Inicjalizacja petli
     unsigned int frame_width = img_first.cols;
 	unsigned int frame_height = img_first.rows;
@@ -45,7 +29,7 @@ int main() {
 
     for( size_t img_id = 0; img_id < 71; img_id++) {
         // std::cout << name << '\n' ;
-        std::string path = "../../../../images/game1/";
+        std::string path = "../../../../images/game2/";
         std::string full_path = path + std::to_string(img_id) + std::string(".jpg");
         cv::Mat img_orig = cv::imread( cv::samples::findFile( full_path.c_str() ), cv::IMREAD_COLOR );
         cv::Mat img_orig_masked = copyOneImage(img_orig);
@@ -54,9 +38,9 @@ int main() {
                 cv::Vec3b pixel = img_orig_masked.at<cv::Vec3b>(x,y);
                 cv::Vec3b mask_pixel = mask.at<cv::Vec3b>(x,y);
                 if (mask_pixel[0] != 0 || mask_pixel[1] != 0 || mask_pixel[2] != 0) {
-                    pixel[0] = 194; // H
-                    pixel[1] = 194;  // S
-                    pixel[2] = 194; // V
+                    pixel[0] = 0; // H
+                    pixel[1] = 0;  // S
+                    pixel[2] = 0; // V
                     img_orig_masked.at<cv::Vec3b>(x,y) = pixel;
                 }
             }
@@ -67,9 +51,9 @@ int main() {
         // detekcja prostokatow
         cv::Mat img_blured;
         // cv::GaussianBlur(image_orig_masked_old, img_blured, cv::Size(13, 13), 0);
-        // display("findSquares", img_blured);
+        // display("findSquares", img_blured, true);
         // display("findSquares", image_orig_masked_old);
-        cv::imshow("findSquares", image_orig_masked_old);
+        display("findSquares", image_orig_masked_old, false);
         // twm::hough::findSquares(img_blured, foundSquares);
         auto foundSquares = twm::hough::findSquares(image_orig_masked_old, desired_size);
         std::cout << "foundSquares.size() = " << foundSquares.size() << std::endl;
