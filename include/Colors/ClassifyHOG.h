@@ -38,10 +38,11 @@ public:
       return hog_vector;
    }
 
-   std::pair<std::string, int> classifyHog(cv::Mat detected_square) {
+   std::tuple<int, std::string, int> classifyHog(cv::Mat detected_square) {
       std::vector<float> hog_vector, hog_vector_detected;
       double min_dist = std::numeric_limits<double>::infinity();
-      std::pair<std::string, int> detected_tile;
+      std::tuple<int, std::string, int> detected_tile;
+      std::uint8_t i = 0;
       for( const auto& fname : twm::hough::get_filenames( "../../../../images/tiles" ) ) {
             std::cout << "./" << fname << '\n' ;
             const char * fname_cstr = fname.c_str();
@@ -49,7 +50,7 @@ public:
             for (int rotation = 0; rotation < 4; ++rotation) {
                int detected_square_width = detected_square.cols;
                int detected_square_height = detected_square.rows;
-                
+               
                cv::Mat tile_ref;
                cv::resize(tile, tile_ref, cv::Size(static_cast<std::size_t>(detected_square_width), static_cast<std::size_t>(detected_square_height)));
 
@@ -58,7 +59,7 @@ public:
                double dist = cv::norm(hog_vector, hog_vector_detected);
                if (dist < min_dist) {
                   min_dist = dist;
-                  detected_tile = make_pair(fname, rotation);
+                  detected_tile = make_tuple(i, fname, rotation);
                }
 
                // std::cout << "dist: " << dist << std::endl;
@@ -66,6 +67,7 @@ public:
                cv::transpose(tile, tile);
                cv::flip(tile, tile, 1);
             }
+            ++i;
       }
       return detected_tile;
    }

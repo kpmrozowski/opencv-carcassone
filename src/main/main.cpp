@@ -4,7 +4,7 @@
 #include <Colors/ClassifyHOG.h>
 #include <limits>
 #include <Carcassonne/Game/Board.h>
-#include <limits>
+#include <cmath>
 
 #include <Colors/Colors.h>
 #include <Utils/rgb2hsv.h>
@@ -17,7 +17,7 @@ using namespace twm;
 
 int main() {
     srand(time(NULL));
-    cv::Mat img_first = cv::imread( cv::samples::findFile( "../../../../images/game2/1.jpg" ), cv::IMREAD_COLOR );
+    cv::Mat img_first = cv::imread( cv::samples::findFile( "../../../../images/game2/0.jpg" ), cv::IMREAD_COLOR );
     // Inicjalizacja petli
     unsigned int frame_width = img_first.cols;
 	unsigned int frame_height = img_first.rows;
@@ -26,6 +26,7 @@ int main() {
     using carcassonne::TilePlacement;
     mb::vector2d<TilePlacement> m_board;
     unsigned int desired_size = std::max(frame_width, frame_height);
+    int base_x = 70, base_y = 70;
 
     for( size_t img_id = 0; img_id < 72; img_id++) {
         // std::cout << name << '\n' ;
@@ -45,7 +46,7 @@ int main() {
                 }
             }
         }
-        // display("img_orig_masked", img_orig_masked);
+        display("img_orig_masked", img_orig_masked);    cv::destroyWindow("img_orig_masked");
         image_orig_masked_old = copyOneImage(img_orig_masked);
 
         // detekcja prostokatow
@@ -53,20 +54,22 @@ int main() {
         // cv::GaussianBlur(image_orig_masked_old, img_blured, cv::Size(13, 13), 0);
         // display("findSquares", img_blured, true);
         // display("findSquares", image_orig_masked_old);
-        display("findSquares", image_orig_masked_old, false);
+        // display("findSquares", image_orig_masked_old, false);
         // twm::hough::findSquares(img_blured, foundSquares);
         auto foundSquares = twm::hough::findSquares(image_orig_masked_old, desired_size);
         std::cout << "foundSquares.size() = " << foundSquares.size() << std::endl;
         std::vector<Square> squares;
         cv::Mat img_orig_polylines = copyOneImage(img_orig);
+        Square s;
         for (auto square : foundSquares) { // wiadomo ze bedzie tylko 1 square
             // std::cout << square[0] << ", " << square[1] << ", " << square[2] << ", " << square[3] << ", " << std::endl;
-            Square s = Square(square);
+            s = Square(square);
             squares.push_back(s);
             // s.print();
-            // s.draw(img_orig_polylines, 255, 255, 0);
+            s.draw(img_orig_polylines, 255, 0, 0);
         }
-        polylines(img_orig_polylines, foundSquares, true, cv::Scalar(0, 255, 0), 3, cv::LINE_AA);
+        
+        // polylines(img_orig_polylines, foundSquares, true, cv::Scalar(0, 255, 0), 3, cv::LINE_AA);
         std::cout << "squares.size() = " << squares.size() << std::endl;
 
         // wycinanie wykrytego prostokata
@@ -79,17 +82,37 @@ int main() {
         for (const auto &im : squareImages) { // wiadomo ze bedzie tylko 1 square
             detected_square = im;
         }
+
+        int detected_tile_id;
+        std::string_view detected_tile_path;
+        int detected_tile_rotation;
+        std::tie(detected_tile_id, detected_tile_path, detected_tile_rotation) = classifier.classifyHog(detected_square);
+        std::cout << "Znaleziony obrazek: " << detected_tile_path << " " << detected_tile_id << " " << detected_tile_rotation <<  std::endl;
+        // std::cout << " " << detected_tile_rotation <<  std::endl;
+
+        // szczytywanie rozmiarow znalezionego kafelka oraz polozenia
+        int x, y, maxX, minX, maxY, minY;
         desired_size = (detected_square.cols + detected_square.rows) / 2;
-        std::pair<std::string, int> detected_tile_info = classifier.classifyHog(detected_square);
-        std::cout << "Znaleziony obrazek: " << detected_tile_info.first << " " << detected_tile_info.second <<  std::endl;
+        std::tie(maxX, minX, maxY, minY) = twm::hough::square_to_min_max_x_y(s);
+        if (img_id == 0) {
+            base_x = minX;
+            base_y = minY;
+            x = 70;
+            y = 70;
+        } else {
+            x = 70 + round((minX - base_x) / static_cast<double>(desired_size));
+            y = 70 + round((minY - base_y) / static_cast<double>(desired_size));
+        }
 
-        const char* wndname = "Square Detection Demo";
-        display(wndname, img_orig_polylines);
-        
         // dodaj kafelek do wirtualnej planszy
-        std::uint8_t t = 0, rotation = 0;
-        m_board.set(70, 70, TilePlacement{.type = t, .rotation = rotation});
+        std::uint8_t t, rotation;
+        t = static_cast<std::uint8_t>(detected_tile_id);
+        rotation = static_cast<std::uint8_t>(detected_tile_rotation);
+        const char* wndname = "Square Detection Demo";
+        display(wndname, img_orig_polylines);     cv::destroyWindow(wndname);
+        m_board.set(x, y, TilePlacement{.type = t, .rotation = rotation});
 
+        // tworzenie maski z poprzednich kafelkow
         // display("MASK INPUT", img_orig);
         cv::Mat mask1 = utils::color_tresholder(img_orig);
         mask = copyOneImage(mask1);

@@ -27,22 +27,28 @@ std::tuple<unsigned char, unsigned char, unsigned char> getColors() {
         (rand() % 255 + 1, rand() % 255 + 1, rand() % 255 + 1);
 }
 
+std::tuple<int, int, int, int> square_to_min_max_x_y(Square square)  {
+    std::vector<int> y_range = std::vector<int>({square.NW.y, square.NE.y, square.SE.y, square.SW.y});
+    std::vector<int> x_range = std::vector<int>({square.NW.x, square.NE.x, square.SE.x, square.SW.x});
+    auto maxX = std::max_element(x_range.begin(), x_range.end());
+    auto minX = std::min_element(x_range.begin(), x_range.end());
+    auto maxY = std::max_element(y_range.begin(), y_range.end());
+    auto minY = std::min_element(y_range.begin(), y_range.end());
+    return std::make_tuple(*maxX, *minX, *maxY, *minY);
+}
+
 std::vector<cv::Mat> getSquareImages(const cv::Mat &canvas, const std::vector<Square> &squares) {
     std::vector<cv::Mat> squareImages;
     for (auto square : squares) {
-        std::vector<int> y_range = std::vector<int>({square.NW.y, square.NE.y, square.SE.y, square.SW.y});
-        std::vector<int> x_range = std::vector<int>({square.NW.x, square.NE.x, square.SE.x, square.SW.x});
-        auto maxX = std::max_element(x_range.begin(), x_range.end());
-        auto minX = std::min_element(x_range.begin(), x_range.end());
-        auto maxY = std::max_element(y_range.begin(), y_range.end());
-        auto minY = std::min_element(y_range.begin(), y_range.end());
-        cv::Rect roi(*minX, *minY, *maxX - *minX, *maxY - *minY);
+        int maxX, minX, maxY, minY;
+        std::tie(maxX, minX, maxY, minY) = square_to_min_max_x_y(square);
+
+        cv::Rect roi(minX, minY, maxX - minX, maxY - minY);
         cv::Mat canva(canvas,roi);
         squareImages.push_back(canva);
         // std::cout << "canvas.rows = " << canvas.rows << "canvas.cols = " << canvas.cols << std::endl;
         // std::cout << "minX = " << *minX << ", minY = " << *minY << ", maxX = " << *maxX << ", maxY = " << *maxY << std::endl;
         // std::cout << "roi.width = " << roi.width << "roi.height = " << roi.height << std::endl;
-
     }
     return squareImages;
 }
