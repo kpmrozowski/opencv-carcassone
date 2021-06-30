@@ -6,11 +6,29 @@
 
 #include  <limits>
 #include <tuple>
+#include <fmt/core.h>
 using size_t = std::size_t;
 using vus = std::vector<size_t>;
 using count = size_t;
 using pivot_angle = double;
 using Histogram = std::vector<std::pair<pivot_angle, count>>;
+
+/* a function to generate numpy linspace */
+template <typename T>
+std::vector<T> linspace(double start, double end, double num) {
+    std::vector<T> linspaced;
+    if (0 != num) {
+        if (1 == num)  {
+            linspaced.push_back(static_cast<T>(start));
+        } else {
+            double delta = (end - start) / (num - 1);
+            for (auto i = 0; i < num; ++i) {
+                linspaced.push_back(static_cast<T>(round(start + delta * i)));
+            }
+        }
+    }
+    return linspaced;
+}
 
 class Lines
 {
@@ -82,7 +100,7 @@ public:
     }
 
     Lines GetHVlines() {
-        Histogram hist = getAngleHistogram(12);
+        Histogram hist = getAngleHistogram(24);
         Lines filteredLines;
         size_t length = hist.size();
         size_t cluster = length / 4.;
@@ -107,6 +125,117 @@ public:
         }
         return filteredLines;
     }
+
+    void GetHVkMeans_example() {
+        const int MAX_CLUSTERS = 5;
+        cv::Scalar colorTab[] =
+        {
+            cv::Scalar(0, 0, 255),
+            cv::Scalar(0,255,0),
+            cv::Scalar(255,100,100),
+            cv::Scalar(255,0,255),
+            cv::Scalar(0,255,255)
+        };
+        cv::Mat img(500, 500, CV_8UC3);
+        cv::RNG rng(12345);
+        for(;;)
+        {
+            int k, clusterCount = rng.uniform(2, MAX_CLUSTERS+1);
+            int i, sampleCount = rng.uniform(1, 1001);
+            cv::Mat points(sampleCount, 1, CV_32FC2), labels;
+            clusterCount = std::min(clusterCount, sampleCount);
+            std::vector<cv::Point2f> centers;
+            /* generate random sample from multigaussian distribution */
+            for( k = 0; k < clusterCount; k++ ) {
+                cv::Point center;
+                center.x = rng.uniform(0, img.cols);
+                center.y = rng.uniform(0, img.rows);
+                cv::Mat pointChunk = points.rowRange(k*sampleCount/clusterCount,
+                                                 k == clusterCount - 1 ? sampleCount :
+                                                 (k+1)*sampleCount/clusterCount);
+                rng.fill(pointChunk, cv::RNG::NORMAL, cv::Scalar(center.x, center.y), cv::Scalar(img.cols*0.05, img.rows*0.05));
+            }
+            cv::randShuffle(points, 1, &rng);
+            double compactness = cv::kmeans(points, clusterCount, labels,
+                cv::TermCriteria( cv::TermCriteria::EPS + cv::TermCriteria::COUNT, 1000, .01),
+                   3, cv::KMEANS_PP_CENTERS, centers);
+            img = cv::Scalar::all(0);
+            for( i = 0; i < sampleCount; i++ ) {
+                int clusterIdx = labels.at<int>(i);
+                cv::Point ipt = points.at<cv::Point2f>(i);
+                cv::circle( img, ipt, 2, colorTab[clusterIdx], cv::FILLED, cv::LINE_AA );
+            }
+            for (i = 0; i < (int)centers.size(); ++i) {
+                cv::Point2f c = centers[i];
+                cv::circle( img, c, 40, colorTab[i], 1, cv::LINE_AA );
+            }
+            std::cout << "Compactness: " << compactness << std::endl;
+            cv::imshow("clusters", img);
+            char key = (char)cv::waitKey();
+            if( key == 27 || key == 'q' || key == 'Q' ) // 'ESC'
+                break;
+        }
+    }
+
+    void GetHVkMeans() {
+        cv::Scalar colorTab[] =
+        {
+            cv::Scalar(0, 0, 255),
+            cv::Scalar(0,255,0),
+            cv::Scalar(255,100,100),
+            cv::Scalar(255,0,255),
+            cv::Scalar(0,255,255)
+        };
+        cv::Mat img(500, 500, CV_8UC3);
+        cv::RNG rng(12345);
+        int k, clusterCount = 90;
+        int i, sampleCount = m_linesvec.size();
+        clusterCount = std::min(clusterCount, sampleCount);
+        std::vector<float> centers(clusterCount);
+        std::vector<int> labels(sampleCount);
+        std::vector<float> cosines(sampleCount);
+        std::cout << "sampleCount = " << sampleCount << std::endl;
+        std::transform(m_linesvec.begin(), m_linesvec.end(), cosines.begin(), [](const Line& l) -> float { 
+            auto angle = static_cast<float>(l.m_angle);
+            // std::cout << "angle = " << angle << std::endl;
+            if (angle < -90. || angle > 180.) {
+                std::cout << "angle < -90. || angle > 90." << std::endl;
+                return static_cast<float>(.5);
+            } else
+                return static_cast<float>(l.m_angle); 
+            });
+        cv::Mat cosines_Mat(sampleCount, 1, CV_32FC1, &cosines[0]);
+        // auto labels(linspace<int>(0., clusterCount - 1, sampleCount));
+        // for (auto a : labels) {
+        //     fmt::print("{} ", a);
+        // }
+        // fmt::print("\n");
+
+        double compactness = cv::kmeans(cosines_Mat, clusterCount, labels,
+            cv::TermCriteria( cv::TermCriteria::EPS + cv::TermCriteria::COUNT, 100000, 0.00001),
+               3, cv::KMEANS_PP_CENTERS, centers);
+        std::cout << "Compactness: " << compactness << std::endl;
+
+        std::vector<int> labelsCounts(clusterCount, 0);
+        for (const auto& label : labels)
+            ++labelsCounts[label];
+
+        img = cv::Scalar::all(0);
+        for( i = 0; i < sampleCount; i++ ) {
+            int clusterIdx = labels[i];
+            auto angle = std::acos(cosines.at(i));
+            cv::Point ipt(angle, angle);
+
+            cv::circle( img, ipt, 2, colorTab[clusterIdx], cv::FILLED, cv::LINE_AA );
+        }
+        for (i = 0; i < (int)centers.size(); ++i) {
+            cv::Point2f c(centers[i], centers[i]);
+            cv::circle( img, c, 40, colorTab[i], 1, cv::LINE_AA );
+        }
+        cv::imshow("clusters", img);
+        cv::waitKey();
+    }
+    
     Lines GetHVlinesSimple(int tolerance) {
         Lines filteredLines;
         for (std::size_t i = 0; i < m_linesvec.size(); i++) {

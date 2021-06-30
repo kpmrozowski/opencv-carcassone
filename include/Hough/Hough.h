@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <ctime>
 #include <cmath>
+#include <fmt/core.h>
 
 namespace twm::hough {
 
@@ -66,30 +67,35 @@ cv::Mat detect_liness(const char* filename) {
         return src1;
     }
 
-    /* Edge detection */
-    if (false)
-        Canny(src, dst, 50, 100, 3, true);
-    else 
-        Canny(src, dst, 11000, 11000, 7, true);
-    
-    dilate(dst, dst, cv::Mat(), cv::Point(-1,-1));
-    /* Copy edges to the images that will display the results in BGR */
-    cvtColor(dst, cdst, cv::COLOR_GRAY2BGR);
-    cdstP = cdst.clone();
+    auto canny_treshold1 = 11000, canny_treshold2 = 1100;
+    Lines lines;
+    while (true) {
+        /* Edge detection */
+        if (false)
+            Canny(src, dst, 50, 100, 3, true);
+        else 
+            Canny(src, dst, canny_treshold1, canny_treshold2, 7, true);
+        
+        // imshow("Canny", dst);
+        // cv::waitKey();
+        dilate(dst, dst, cv::Mat(), cv::Point(-1,-1));
 
-    if (false)
-        imshow("Source", src);
-    
-    if (false) {
-        /* Standard Hough Line Transform */
+        /* Copy edges to the images that will display the results in BGR */
+        cvtColor(dst, cdst, cv::COLOR_GRAY2BGR);
+        cdstP = cdst.clone();
+
+        if (false)
+            imshow("Source", src);
+        
+        /*
+        // Standard Hough Line Transform 
         std::vector<cv::Vec2f> lines; // will hold the results of the detection
         HoughLines(dst, lines, 1, CV_PI/180, 150); // runs the actual detection
         if (false)
             for (auto line : lines)
                 std::cout << line[0] << " " << line[1] << std::endl;
-                
 
-        /* Draw the lines */
+        // Draw the lines 
         for( std::size_t i = 0; i < lines.size(); i++ )
         {
             float rho = lines[i][0], theta = lines[i][1];
@@ -105,7 +111,8 @@ cv::Mat detect_liness(const char* filename) {
         imshow("Detected Lines (in red) - Standard Hough Line Transform", cdst);
         cv::waitKey();
         return cdst;
-    } else {
+        */
+
         /* Probabilistic Line Transform */
         /* results of the detection */
 
@@ -119,47 +126,59 @@ cv::Mat detect_liness(const char* filename) {
         HoughLinesP(dst, linesPCoords, 2, CV_PI/180, 100, 70, 30); // runs the actual detection
 
         // HoughLinesP(dst, linesPCoords, 0.1, CV_PI/1800, 1, 130, 24);
-
-        Lines lines(linesPCoords);
-        // lines.print();
-
-        Lines filteredLines = lines.GetHVlinesSimple(5);
-        // filteredLines.findPairs();
-        // filteredLines.print();
-        // std::cout << "m_pararrel_pairs.size = " << lines.m_pararrel_pairs.size() << std::endl;
-        // std::vector<Square> filteredSquares = filteredLines.getSquares();
-        // std::cout << "filteredSquares.size = " << filteredSquares.size() << std::endl;
-
-        // std::vector<std::vector<cv::Point, cv::Point>> contours;
-        // findContours(dst, contours, cv::RETR_LIST, cv::CHAIN_APPROX_SIMPLE);
-
-        /* Draw the lines */
-        for(auto line : lines.m_linesvec)
-        {
-            line.draw(cdstP, 0, 0, 255);
+        auto size = linesPCoords.size();
+        fmt::print("size = {},\t canny_treshold1 = {},\t canny_treshold2 = {}\n", size, canny_treshold1, canny_treshold2);
+        if (size < 2500) {
+            lines = Lines(linesPCoords);
+            break;
         }
-        for(auto line : filteredLines.m_linesvec)
-        {
-            // line.print();
-            line.draw(cdstP, 255, 0, 0);
-        }
-        // for(auto square : filteredSquares)
-        // {
-        //     square.print();
-        //     unsigned char R,G,B;
-        //     std::tie(R,G,B) = getColors();
-        //     square.draw(cdstP, R, G, B);
-        // }
-        int frame_width = cdstP.cols;
-	    int frame_height = cdstP.rows;
-        float scale = 1080. / frame_height;
-        cv::resize(cdstP, cdstP, cv::Size(static_cast<std::size_t>(frame_width * scale), static_cast<std::size_t>(frame_height * scale)));
-        
-        cv::imshow("Detected Lines (in red) - Probabilistic Line Transform", cdstP);
-
-        cv::waitKey();
-        return cdstP;
+        canny_treshold1 *= 1.05;
+        canny_treshold2 *= 1.1;
     }
+
+    // lines.print();
+
+    // Lines filteredLines = lines.GetHVlinesSimple(5);
+    lines.GetHVkMeans();
+
+    Lines filteredLines = lines.GetHVlines();
+    fmt::print("Found {} lines\n\n", lines.m_linesvec.size());
+    fmt::print("Detected {} lines\n\n", filteredLines.m_linesvec.size()); 
+    // filteredLines.findPairs();
+    // filteredLines.print();
+    // std::cout << "m_pararrel_pairs.size = " << lines.m_pararrel_pairs.size() << std::endl;
+    // std::vector<Square> filteredSquares = filteredLines.getSquares();
+    // std::cout << "filteredSquares.size = " << filteredSquares.size() << std::endl;
+
+    // std::vector<std::vector<cv::Point, cv::Point>> contours;
+    // findContours(dst, contours, cv::RETR_LIST, cv::CHAIN_APPROX_SIMPLE);
+
+    /* Draw the lines */
+    for(auto line : lines.m_linesvec)
+    {
+        line.draw(cdstP, 0, 0, 255);
+    }
+    for(auto line : filteredLines.m_linesvec)
+    {
+        // line.print();
+        line.draw(cdstP, 255, 0, 0);
+    }
+    // for(auto square : filteredSquares)
+    // {
+    //     square.print();
+    //     unsigned char R,G,B;
+    //     std::tie(R,G,B) = getColors();
+    //     square.draw(cdstP, R, G, B);
+    // }
+    frame_width = cdstP.cols;
+	frame_height = cdstP.rows;
+    scale = 1080. / frame_height;
+    cv::resize(cdstP, cdstP, cv::Size(static_cast<std::size_t>(frame_width * scale), static_cast<std::size_t>(frame_height * scale)));
+    
+    cv::imshow("Detected Lines (in red) - Probabilistic Line Transform", cdstP);
+
+    cv::waitKey();
+    return cdstP;
 }
 } // namespace twm::hough
 

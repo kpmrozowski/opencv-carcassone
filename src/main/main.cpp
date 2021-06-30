@@ -27,11 +27,16 @@ int main() {
     mb::vector2d<TilePlacement> m_board;
     unsigned int desired_size = std::max(frame_width, frame_height);
 
-    for( size_t img_id = 0; img_id < 72; img_id++) {
+    for( size_t img_id = 72; img_id > 0; --img_id) {
         // std::cout << name << '\n' ;
         std::string path = "../../../../images/game2/";
         std::string full_path = path + std::to_string(img_id) + std::string(".jpg");
         cv::Mat img_orig = cv::imread( cv::samples::findFile( full_path.c_str() ), cv::IMREAD_COLOR );
+        cv::Mat img_lines = twm::hough::detect_liness(full_path.c_str());
+        // display("img_lines", img_lines);
+
+
+
         cv::Mat img_orig_masked = copyOneImage(img_orig);
         for (size_t x = 0; x < img_orig.rows; x++) {
             for (size_t y = 0; y < img_orig.cols; y++) {
@@ -39,7 +44,7 @@ int main() {
                 cv::Vec3b mask_pixel = mask.at<cv::Vec3b>(x,y);
                 if (mask_pixel[0] != 0 || mask_pixel[1] != 0 || mask_pixel[2] != 0) {
                     pixel[0] = 0; // H
-                    pixel[1] = 0;  // S
+                    pixel[1] = 0; // S
                     pixel[2] = 0; // V
                     img_orig_masked.at<cv::Vec3b>(x,y) = pixel;
                 }
