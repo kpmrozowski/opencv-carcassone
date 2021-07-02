@@ -100,10 +100,10 @@ public:
     }
 
     Lines GetHVlines() {
-        Histogram hist = getAngleHistogram(24);
+        Histogram hist = getAngleHistogram(90);
         Lines filteredLines;
         size_t length = hist.size();
-        size_t cluster = length / 4.;
+        // size_t cluster = length / 4.;
         Histogram hist1(hist.begin(), hist.begin() + length/4);
         Histogram hist2(hist.begin() + length/4 + 1, hist.begin() + 3*length/4);
         Histogram hist3(hist.begin() + 3*length/4 + 1, hist.end());
@@ -232,8 +232,8 @@ public:
             cv::Point2f c(centers[i], centers[i]);
             cv::circle( img, c, 40, colorTab[i], 1, cv::LINE_AA );
         }
-        cv::imshow("clusters", img);
-        cv::waitKey();
+        // cv::imshow("clusters", img);
+        // cv::waitKey();
     }
     
     Lines GetHVlinesSimple(int tolerance) {

@@ -57,7 +57,7 @@ cv::Mat detect_liness(const char* filename) {
     cv::Mat src1 = imread( cv::samples::findFile( filename ), cv::IMREAD_GRAYSCALE );
     int frame_width = src1.cols;
 	int frame_height = src1.rows;
-    float scale = 2160. / frame_height;
+    float scale = 1080. / frame_height;
     cv::resize(src1, src, cv::Size(static_cast<std::size_t>(frame_width * scale), static_cast<std::size_t>(frame_height * scale)));
 
     /* Check if image is loaded fine */
@@ -67,7 +67,7 @@ cv::Mat detect_liness(const char* filename) {
         return src1;
     }
 
-    auto canny_treshold1 = 11000, canny_treshold2 = 1100;
+    auto canny_treshold1 = 21000, canny_treshold2 = 1100 ;
     Lines lines;
     while (true) {
         /* Edge detection */
@@ -128,7 +128,7 @@ cv::Mat detect_liness(const char* filename) {
         // HoughLinesP(dst, linesPCoords, 0.1, CV_PI/1800, 1, 130, 24);
         auto size = linesPCoords.size();
         fmt::print("size = {},\t canny_treshold1 = {},\t canny_treshold2 = {}\n", size, canny_treshold1, canny_treshold2);
-        if (size < 2500) {
+        if (size < 1000) {
             lines = Lines(linesPCoords);
             break;
         }
