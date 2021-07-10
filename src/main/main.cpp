@@ -32,7 +32,9 @@ int main() {
         std::string path = "../../../../images/game2/";
         std::string full_path = path + std::to_string(img_id) + std::string(".jpg");
         cv::Mat img_orig = cv::imread( cv::samples::findFile( full_path.c_str() ), cv::IMREAD_COLOR );
-        cv::Mat img_lines = twm::hough::detect_liness(full_path.c_str());
+        // img_orig = cv::imread( cv::samples::findFile( "/home/kmro/Documents/pw_eiti/twm/test_set_color/test_02.jpg" ), cv::IMREAD_COLOR );
+        // cv::Mat img_lines = twm::hough::detect_liness(full_path.c_str());
+        // cv::Mat img_lines = twm::hough::detect_liness("/home/kmro/Documents/pw_eiti/twm/test_set_color/test_02.jpg");
         // display("img_lines", img_lines);
 
 
