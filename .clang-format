@@ -1,4 +1,4 @@
-BasedOnStyle: LLVM
+BasedOnStyle: google
 AccessModifierOffset: -2
 AlignAfterOpenBracket: Align
 AlignConsecutiveAssignments: false
@@ -32,7 +32,7 @@ BreakBeforeBinaryOperators: None
 BreakBeforeTernaryOperators: true
 BreakConstructorInitializers: BeforeColon
 BreakInheritanceList: BeforeColon
-ColumnLimit: 0
+ColumnLimit: 200
 CompactNamespaces: true
 ContinuationIndentWidth: 8
 IndentCaseLabels: false

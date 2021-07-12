@@ -11,5 +11,8 @@ target_link_libraries( watershed ${OpenCV_LIBS} stdc++fs fmt twm_colors twm_homo
 add_executable(kmeans kmeans.cpp)
 target_link_libraries( kmeans ${OpenCV_LIBS} stdc++fs fmt twm_colors twm_homography msi_carcassonne_game)
 
+add_executable(tests tests.cpp)
+target_link_libraries( tests ${OpenCV_LIBS} stdc++fs fmt twm_colors twm_homography msi_carcassonne_game)
+
 
 
