@@ -56,10 +56,10 @@ class Lines {
 
   [[nodiscard]] inline std::tuple<double, double, double> cartesianToGeneral(
       const Line& l) {
-    double x1 = l.m_coords[0];
-    double y1 = l.m_coords[1];
-    double x2 = l.m_coords[2];
-    double y2 = l.m_coords[3];
+    double x1 = l.p1().x;
+    double y1 = l.p1().y;
+    double x2 = l.p2().x;
+    double y2 = l.p2().y;
     double a = y2 - y1;
     double b = x2 - x1;
     double c = (x1 - x2) * y2 + (y1 - y2) * x2;
@@ -69,7 +69,7 @@ class Lines {
   void sortByAngles() {
     std::sort(m_linesvec.begin(), m_linesvec.end(),
               [](const Line& l1, const Line& l2) -> bool {
-                return l1.m_angle > l2.m_angle;
+                return l1.angle() > l2.angle();
               });
   }
   void print() {
@@ -85,7 +85,7 @@ class Lines {
     double pivot_angle = 90 - 180 / static_cast<double>(segments);
     size_t pivot_idx = 0;
     for (int i = 0; i < m_linesvec.size(); i++) {
-      if (m_linesvec[i].m_angle > pivot_angle) {
+      if (m_linesvec[i].angle() > pivot_angle) {
         histogram[pivot_idx].second++;
       } else {
         histogram[pivot_idx].first = pivot_angle;
@@ -128,11 +128,11 @@ class Lines {
     std::cout << "pivot_angle2: " << (*it2).first << std::endl;
 
     for (std::size_t i = 0; i < m_linesvec.size(); i++) {
-      if (m_linesvec[i].m_angle > (*it1).first &&
-          m_linesvec[i].m_angle < (*it1).first + 180 / length) {
+      if (m_linesvec[i].angle() > (*it1).first &&
+          m_linesvec[i].angle() < (*it1).first + 180 / length) {
         filteredLines.m_linesvec.push_back(m_linesvec[i]);
-      } else if (m_linesvec[i].m_angle > (*it2).first &&
-                 m_linesvec[i].m_angle < (*it2).first + 180 / length) {
+      } else if (m_linesvec[i].angle() > (*it2).first &&
+                 m_linesvec[i].angle() < (*it2).first + 180 / length) {
         filteredLines.m_linesvec.push_back(m_linesvec[i]);
       }
     }
@@ -203,13 +203,13 @@ class Lines {
     std::cout << "sampleCount = " << sampleCount << std::endl;
     std::transform(m_linesvec.begin(), m_linesvec.end(), cosines.begin(),
                    [](const Line& l) -> float {
-                     auto angle = static_cast<float>(l.m_angle);
+                     auto angle = static_cast<float>(l.angle());
                      // std::cout << "angle = " << angle << std::endl;
                      if (angle < -90. || angle > 180.) {
                        std::cout << "angle < -90. || angle > 90." << std::endl;
                        return static_cast<float>(.5);
                      } else
-                       return static_cast<float>(l.m_angle);
+                       return static_cast<float>(l.angle());
                    });
     cv::Mat cosines_Mat(sampleCount, 1, CV_32FC1, &cosines[0]);
 
@@ -265,10 +265,10 @@ class Lines {
   Lines GetHVlinesSimple(int tolerance) {
     Lines filteredLines;
     for (std::size_t i = 0; i < m_linesvec.size(); i++) {
-      if (m_linesvec[i].m_angle > (90 - tolerance) ||
-          m_linesvec[i].m_angle < (-90 + tolerance) ||
-          m_linesvec[i].m_angle < tolerance &&
-              m_linesvec[i].m_angle > -tolerance) {
+      if (m_linesvec[i].angle() > (90 - tolerance) ||
+          m_linesvec[i].angle() < (-90 + tolerance) ||
+          m_linesvec[i].angle() < tolerance &&
+              m_linesvec[i].angle() > -tolerance) {
         filteredLines.m_linesvec.push_back(this->m_linesvec[i]);
       }
     }
@@ -281,10 +281,10 @@ class Lines {
       double a, b, c;
       std::tie(a, b, c) = cartesianToGeneral(m_linesvec[i]);
       for (size_t j = i + 1; j < m_linesvec.size(); j++) {
-        double x0 = (m_linesvec[j].m_coords[0] + m_linesvec[j].m_coords[2]) / 2;
-        double y0 = (m_linesvec[j].m_coords[1] + m_linesvec[j].m_coords[3]) / 2;
+        double x0 = (m_linesvec[j].p1().x + m_linesvec[j].p2().x) / 2;
+        double y0 = (m_linesvec[j].p1().y + m_linesvec[j].p2().y) / 2;
         double d = abs(a * x0 + b * y0 + c) / sqrt(pow(a, 2) + pow(b, 2));
-        bool cond1 = abs(m_linesvec[i].m_angle - m_linesvec[j].m_angle) <
+        bool cond1 = abs(m_linesvec[i].angle() - m_linesvec[j].angle()) <
                      angle_tollerance;
         bool cond2a = d > min_dist;
         bool cond2b = d < max_dist;
@@ -310,64 +310,64 @@ class Lines {
         if (m_pararrel_pairs[i].first.isVertical() !=
             m_pararrel_pairs[j].first.isVertical()) {
           if (m_pararrel_pairs[i].first.isVertical()) {
-            if (m_pararrel_pairs[i].first.m_coords[0] <
-                m_pararrel_pairs[i].second.m_coords[0]) {
-              if (m_pararrel_pairs[j].first.m_coords[1] >
-                  m_pararrel_pairs[j].second.m_coords[1]) {
+            if (m_pararrel_pairs[i].first.p1().x <
+                m_pararrel_pairs[i].second.p1().x) {
+              if (m_pararrel_pairs[j].first.p1().y >
+                  m_pararrel_pairs[j].second.p1().y) {
                 // std::cout << "(" << i << "," << j << "): if1 ";
-                NW = Point(m_pararrel_pairs[i].first.m_coords[0],
-                           m_pararrel_pairs[j].first.m_coords[1]);
-                NE = Point(m_pararrel_pairs[i].second.m_coords[0],
-                           m_pararrel_pairs[j].first.m_coords[1]);
-                SW = Point(m_pararrel_pairs[i].first.m_coords[0],
-                           m_pararrel_pairs[j].second.m_coords[1]);
-                SE = Point(m_pararrel_pairs[i].second.m_coords[0],
-                           m_pararrel_pairs[j].second.m_coords[1]);
+                 NW = Point(m_pararrel_pairs[i].first.p1().x,
+                            m_pararrel_pairs[j].first.p1().y);
+                NE = Point(m_pararrel_pairs[i].second.p1().x,
+                            m_pararrel_pairs[j].first.p1().y);
+                 SW = Point(m_pararrel_pairs[i].first.p1().x,
+                           m_pararrel_pairs[j].second.p1().y);
+                SE = Point(m_pararrel_pairs[i].second.p1().x,
+                           m_pararrel_pairs[j].second.p1().y);
                 N = m_pararrel_pairs[j].first;
                 E = m_pararrel_pairs[i].second;
                 S = m_pararrel_pairs[j].second;
                 W = m_pararrel_pairs[i].first;
               } else {
                 // std::cout << "(" << i << "," << j << "): if2 ";
-                NW = Point(m_pararrel_pairs[i].first.m_coords[0],
-                           m_pararrel_pairs[j].second.m_coords[1]);
-                NE = Point(m_pararrel_pairs[i].second.m_coords[0],
-                           m_pararrel_pairs[j].second.m_coords[1]);
-                SW = Point(m_pararrel_pairs[i].first.m_coords[0],
-                           m_pararrel_pairs[j].first.m_coords[1]);
-                SE = Point(m_pararrel_pairs[i].second.m_coords[0],
-                           m_pararrel_pairs[j].first.m_coords[1]);
+                NW = Point(m_pararrel_pairs[i].first.p1().x,
+                           m_pararrel_pairs[j].second.p1().y);
+                NE = Point(m_pararrel_pairs[i].second.p1().x,
+                           m_pararrel_pairs[j].second.p1().y);
+                SW = Point(m_pararrel_pairs[i].first.p1().x,
+                           m_pararrel_pairs[j].first.p1().y);
+                SE = Point(m_pararrel_pairs[i].second.p1().x,
+                           m_pararrel_pairs[j].first.p1().y);
                 N = m_pararrel_pairs[j].second;
                 E = m_pararrel_pairs[i].second;
                 S = m_pararrel_pairs[j].first;
                 W = m_pararrel_pairs[i].first;
               }
             } else {
-              if (m_pararrel_pairs[j].first.m_coords[1] >
-                  m_pararrel_pairs[j].second.m_coords[1]) {
+              if (m_pararrel_pairs[j].first.p1().y >
+                  m_pararrel_pairs[j].second.p1().y) {
                 // std::cout << "(" << i << "," << j << "): if3 ";
-                NW = Point(m_pararrel_pairs[i].second.m_coords[0],
-                           m_pararrel_pairs[j].first.m_coords[1]);
-                NE = Point(m_pararrel_pairs[i].first.m_coords[0],
-                           m_pararrel_pairs[j].first.m_coords[1]);
-                SW = Point(m_pararrel_pairs[i].second.m_coords[0],
-                           m_pararrel_pairs[j].second.m_coords[1]);
-                SE = Point(m_pararrel_pairs[i].first.m_coords[0],
-                           m_pararrel_pairs[j].second.m_coords[1]);
+                NW = Point(m_pararrel_pairs[i].second.p1().x,
+                           m_pararrel_pairs[j].first.p1().y);
+                NE = Point(m_pararrel_pairs[i].first.p1().x,
+                           m_pararrel_pairs[j].first.p1().y);
+                SW = Point(m_pararrel_pairs[i].second.p1().x,
+                           m_pararrel_pairs[j].second.p1().y);
+                SE = Point(m_pararrel_pairs[i].first.p1().x,
+                           m_pararrel_pairs[j].second.p1().y);
                 N = m_pararrel_pairs[j].first;
                 E = m_pararrel_pairs[i].first;
                 S = m_pararrel_pairs[j].second;
                 W = m_pararrel_pairs[i].second;
               } else {
                 // std::cout << "(" << i << "," << j << "): if4 ";
-                NW = Point(m_pararrel_pairs[i].second.m_coords[0],
-                           m_pararrel_pairs[j].second.m_coords[1]);
-                NE = Point(m_pararrel_pairs[i].first.m_coords[0],
-                           m_pararrel_pairs[j].second.m_coords[1]);
-                SW = Point(m_pararrel_pairs[i].second.m_coords[0],
-                           m_pararrel_pairs[j].first.m_coords[1]);
-                SE = Point(m_pararrel_pairs[i].first.m_coords[0],
-                           m_pararrel_pairs[j].first.m_coords[1]);
+                NW = Point(m_pararrel_pairs[i].second.p1().x,
+                           m_pararrel_pairs[j].second.p1().y);
+                NE = Point(m_pararrel_pairs[i].first.p1().x,
+                           m_pararrel_pairs[j].second.p1().y);
+                SW = Point(m_pararrel_pairs[i].second.p1().x,
+                           m_pararrel_pairs[j].first.p1().y);
+                SE = Point(m_pararrel_pairs[i].first.p1().x,
+                           m_pararrel_pairs[j].first.p1().y);
                 N = m_pararrel_pairs[j].second;
                 E = m_pararrel_pairs[i].first;
                 S = m_pararrel_pairs[j].first;
@@ -375,33 +375,33 @@ class Lines {
               }
             }
           } else {
-            if (m_pararrel_pairs[j].first.m_coords[0] <
-                m_pararrel_pairs[j].second.m_coords[0]) {
-              if (m_pararrel_pairs[i].first.m_coords[1] >
-                  m_pararrel_pairs[i].second.m_coords[1]) {
+            if (m_pararrel_pairs[j].first.p1().x <
+                m_pararrel_pairs[j].second.p1().x) {
+              if (m_pararrel_pairs[i].first.p1().y >
+                  m_pararrel_pairs[i].second.p1().y) {
                 // std::cout << "(" << i << "," << j << "): if5 ";
-                NW = Point(m_pararrel_pairs[j].first.m_coords[0],
-                           m_pararrel_pairs[i].first.m_coords[1]);
-                NE = Point(m_pararrel_pairs[j].second.m_coords[0],
-                           m_pararrel_pairs[i].first.m_coords[1]);
-                SW = Point(m_pararrel_pairs[j].first.m_coords[0],
-                           m_pararrel_pairs[i].second.m_coords[1]);
-                SE = Point(m_pararrel_pairs[j].second.m_coords[0],
-                           m_pararrel_pairs[i].second.m_coords[1]);
+                NW = Point(m_pararrel_pairs[j].first.p1().x,
+                           m_pararrel_pairs[i].first.p1().y);
+                NE = Point(m_pararrel_pairs[j].second.p1().x,
+                           m_pararrel_pairs[i].first.p1().y);
+                SW = Point(m_pararrel_pairs[j].first.p1().x,
+                           m_pararrel_pairs[i].second.p1().y);
+                SE = Point(m_pararrel_pairs[j].second.p1().x,
+                           m_pararrel_pairs[i].second.p1().y);
                 N = m_pararrel_pairs[i].first;
                 E = m_pararrel_pairs[j].second;
                 S = m_pararrel_pairs[i].second;
                 W = m_pararrel_pairs[j].first;
               } else {
                 // std::cout << "(" << i << "," << j << "): if6 ";
-                NW = Point(m_pararrel_pairs[j].first.m_coords[0],
-                           m_pararrel_pairs[i].second.m_coords[1]);
-                NE = Point(m_pararrel_pairs[j].second.m_coords[0],
-                           m_pararrel_pairs[i].second.m_coords[1]);
-                SW = Point(m_pararrel_pairs[j].first.m_coords[0],
-                           m_pararrel_pairs[i].first.m_coords[1]);
-                SE = Point(m_pararrel_pairs[j].second.m_coords[0],
-                           m_pararrel_pairs[i].first.m_coords[1]);
+                NW = Point(m_pararrel_pairs[j].first.p1().x,
+                           m_pararrel_pairs[i].second.p1().y);
+                NE = Point(m_pararrel_pairs[j].second.p1().x,
+                           m_pararrel_pairs[i].second.p1().y);
+                SW = Point(m_pararrel_pairs[j].first.p1().x,
+                           m_pararrel_pairs[i].first.p1().y);
+                SE = Point(m_pararrel_pairs[j].second.p1().x,
+                           m_pararrel_pairs[i].first.p1().y);
                 N = m_pararrel_pairs[i].second;
                 E = m_pararrel_pairs[j].second;
                 S = m_pararrel_pairs[i].first;
@@ -409,30 +409,30 @@ class Lines {
               }
             } else {
               // std::cout << "(" << i << "," << j << "): if7 ";
-              if (m_pararrel_pairs[i].first.m_coords[1] >
-                  m_pararrel_pairs[i].second.m_coords[1]) {
-                NW = Point(m_pararrel_pairs[j].second.m_coords[0],
-                           m_pararrel_pairs[i].first.m_coords[1]);
-                NE = Point(m_pararrel_pairs[j].first.m_coords[0],
-                           m_pararrel_pairs[i].first.m_coords[1]);
-                SW = Point(m_pararrel_pairs[j].second.m_coords[0],
-                           m_pararrel_pairs[i].second.m_coords[1]);
-                SE = Point(m_pararrel_pairs[j].first.m_coords[0],
-                           m_pararrel_pairs[i].second.m_coords[1]);
+              if (m_pararrel_pairs[i].first.p1().y >
+                  m_pararrel_pairs[i].second.p1().y) {
+                NW = Point(m_pararrel_pairs[j].second.p1().x,
+                           m_pararrel_pairs[i].first.p1().y);
+                NE = Point(m_pararrel_pairs[j].first.p1().x,
+                           m_pararrel_pairs[i].first.p1().y);
+                SW = Point(m_pararrel_pairs[j].second.p1().x,
+                           m_pararrel_pairs[i].second.p1().y);
+                SE = Point(m_pararrel_pairs[j].first.p1().x,
+                           m_pararrel_pairs[i].second.p1().y);
                 N = m_pararrel_pairs[i].first;
                 E = m_pararrel_pairs[j].first;
                 S = m_pararrel_pairs[i].second;
                 W = m_pararrel_pairs[j].second;
               } else {
                 // std::cout << "(" << i << "," << j << "): if8 ";
-                NW = Point(m_pararrel_pairs[j].second.m_coords[0],
-                           m_pararrel_pairs[i].second.m_coords[1]);
-                NE = Point(m_pararrel_pairs[j].first.m_coords[0],
-                           m_pararrel_pairs[i].second.m_coords[1]);
-                SW = Point(m_pararrel_pairs[j].second.m_coords[0],
-                           m_pararrel_pairs[i].first.m_coords[1]);
-                SE = Point(m_pararrel_pairs[j].first.m_coords[0],
-                           m_pararrel_pairs[i].first.m_coords[1]);
+                NW = Point(m_pararrel_pairs[j].second.p1().x,
+                           m_pararrel_pairs[i].second.p1().y);
+                NE = Point(m_pararrel_pairs[j].first.p1().x,
+                           m_pararrel_pairs[i].second.p1().y);
+                SW = Point(m_pararrel_pairs[j].second.p1().x,
+                           m_pararrel_pairs[i].first.p1().y);
+                SE = Point(m_pararrel_pairs[j].first.p1().x,
+                           m_pararrel_pairs[i].first.p1().y);
                 N = m_pararrel_pairs[i].second;
                 E = m_pararrel_pairs[j].first;
                 S = m_pararrel_pairs[i].first;

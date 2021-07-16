@@ -1,6 +1,7 @@
 #ifndef TWM_HOUGH_H
 #define TWM_HOUGH_H
 
+#include <Clasters/Clasters.h>
 #include <fmt/core.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -95,7 +96,7 @@ cv::Mat detect_liness(const char *filename) {
 
     if (false) imshow("Source", src);
 
-    /*
+    /*include/Clasters/Clasters.h
     // Standard Hough Line Transform
     std::vector<cv::Vec2f> lines; // will hold the results of the detection
     HoughLines(dst, lines, 1, CV_PI/180, 150); // runs the actual detection
@@ -157,6 +158,7 @@ cv::Mat detect_liness(const char *filename) {
   }
 
   // lines.print();
+  LinesClasters linesClasters(lines.m_linesvec, frame_height, frame_width);
 
   // Lines filteredLines = lines.GetHVlinesSimple(5);
   std::vector<Line> kMeansLines1, kMeansLines2;

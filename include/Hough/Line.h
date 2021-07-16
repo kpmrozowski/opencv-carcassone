@@ -16,31 +16,72 @@
 #define _USE_MATH_DEFINES
 
 class Line {
- public:
-  Line(){};
-  cv::Vec4i m_coords;
+  std::vector<int> m_coords;
   double m_angle;
   double m_rho;
-  cv::Point p1, p2;
+  cv::Point m_p1, m_p2;
+
+ public:
+  Line(){};
   Line(const cv::Vec4i& coords)
-      : m_coords(coords),
-        p1(cv::Point(coords[0], coords[1])),
-        p2(cv::Point(coords[2], coords[3])) {
+      : m_coords(std::vector<int>{coords[0], coords[1], coords[2], coords[3]})
+      , m_p1(cv::Point(coords[0], coords[1]))
+      , m_p2(cv::Point(coords[2], coords[3])) {
     calculateAngle();
     calculateRho();
   }
-  constexpr bool isVertical(double eps = 10) { return abs(m_angle - 90) < eps; }
-  void print() {
-    std::cout << "x1: " << m_coords[0] << " y1: " << m_coords[1]
-              << " x2: " << m_coords[2] << " y2: " << m_coords[3]
-              << " m_angle: " << m_angle << std::endl;
+  Line(const cv::Point _p1, const cv::Point _p2)
+      : m_coords(std::vector<int>{_p1.x, _p1.y, _p2.x, _p2.y})
+      , m_p1(_p1)
+      , m_p2(_p2) {
+    calculateAngle();
+    calculateRho();
   }
+
+  constexpr const double rho() const noexcept { return m_rho; }
+  constexpr const double angle() const noexcept { return m_angle; }
+  inline const cv::Point p1() const noexcept { return m_p1; }
+  inline const cv::Point p2() const noexcept { return m_p2; }
+
+  constexpr bool isVertical(double eps = 10) const noexcept {
+    return abs(m_angle - 90) < eps;
+  }
+  inline void print() const noexcept {
+    std::cout << "x1: " << p1().x << " y1: " << p1().y
+              << " x2: " << p2().x << " y2: " << p2().y
+              << " m_angle: " << angle() << std::endl;
+  }
+
   void draw(cv::Mat img, unsigned char R, unsigned char G, unsigned char B) {
-    cv::line(img, p1, p2, cv::Scalar(B, G, R), 3, cv::LINE_AA);
+    cv::line(img, p1(), p2(), cv::Scalar(B, G, R), 3, cv::LINE_AA);
+  }
+
+  /*!
+  **\brief calculates a from general line equation a*x + b*y + c = 0
+  **\return a form a*x + b*y + c = 0
+  */
+  inline const double a() const noexcept {
+    return static_cast<double>(p2().y - p1().y);
+  }
+
+  /*!
+  **\brief calculates b from general line equation a*x + b*y + c = 0
+  **\return b form a*x + b*y + c = 0
+  */
+  inline const double b() const noexcept {
+    return static_cast<double>(p1().x - p2().x);
+  }
+
+  /*!
+  **\brief calculates c from general line equation a*x + b*y + c = 0
+  **\return c form a*x + b*y + c = 0
+  */
+  inline const double c() const noexcept {
+    return static_cast<double>(p2().y * (p2().x - p1().x) + p2().x * (p2().y - p1().y));
   }
 
  private:
-  void calculateAngle() {
+  inline void calculateAngle() noexcept {
     if (m_coords[2] - m_coords[0] == 0) {
       m_angle = 90;
     } else {
@@ -50,19 +91,14 @@ class Line {
     }
   }
   void calculateRho() {
-    if (p1 == cv::Point(0, 0) || p2 == cv::Point(0, 0)) {
+    if (p1() == cv::Point(0, 0) || p2() == cv::Point(0, 0)) {
       m_rho = 0.;
       return;
-    } else if (p1.x == p2.x) {
-      m_rho = p1.x;
+    } else if (p1().x == p2().x) {
+      m_rho = p1().x;
       return;
     } else {
-      // ax + by + c = 0
-      double a = static_cast<double>(p2.y - p1.y);
-      double b = static_cast<double>(p1.x - p2.x);
-      double c =
-          static_cast<double>(p2.y * (p2.x - p1.x) + p2.x * (p2.y - p1.y));
-      m_rho = abs(c) / sqrt(pow(a, 2) + pow(b, 2));
+      m_rho = abs(c()) / sqrt(pow(a(), 2) + pow(b(), 2));
     }
   }
 };
