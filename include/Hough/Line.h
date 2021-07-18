@@ -19,6 +19,9 @@ class Line {
   std::vector<int> m_coords;
   double m_angle;
   double m_rho;
+  double m_a;
+  double m_b;
+  double m_c;
   cv::Point m_p1, m_p2;
 
  public:
@@ -27,6 +30,9 @@ class Line {
       : m_coords(std::vector<int>{coords[0], coords[1], coords[2], coords[3]})
       , m_p1(cv::Point(coords[0], coords[1]))
       , m_p2(cv::Point(coords[2], coords[3])) {
+    m_a = static_cast<double>(m_p2.y - m_p1.y);
+    m_b = static_cast<double>(m_p1.x - m_p2.x);
+    m_c = static_cast<double>(m_p1.y * m_p2.x - m_p1.x * m_p2.y);
     calculateAngle();
     calculateRho();
   }
@@ -34,6 +40,9 @@ class Line {
       : m_coords(std::vector<int>{_p1.x, _p1.y, _p2.x, _p2.y})
       , m_p1(_p1)
       , m_p2(_p2) {
+    m_a = static_cast<double>(m_p2.y - m_p1.y);
+    m_b = static_cast<double>(m_p1.x - m_p2.x);
+    m_c = static_cast<double>(m_p1.y * m_p2.x - m_p1.x * m_p2.y);
     calculateAngle();
     calculateRho();
   }
@@ -57,19 +66,19 @@ class Line {
   }
 
   /*!
-  **\brief calculates a from general line equation a*x + b*y + c = 0
+  **\brief returnes "a" from general line equation a*x + b*y + c = 0
   **\return a form a*x + b*y + c = 0
   */
   inline const double a() const noexcept {
-    return static_cast<double>(p2().y - p1().y);
+    return m_a;
   }
 
   /*!
-  **\brief calculates b from general line equation a*x + b*y + c = 0
+  **\brief returnes "b" from general line equation a*x + b*y + c = 0
   **\return b form a*x + b*y + c = 0
   */
   inline const double b() const noexcept {
-    return static_cast<double>(p1().x - p2().x);
+    return m_b;
   }
 
   /*!
@@ -77,7 +86,7 @@ class Line {
   **\return c form a*x + b*y + c = 0
   */
   inline const double c() const noexcept {
-    return static_cast<double>(p2().y * (p2().x - p1().x) + p2().x * (p2().y - p1().y));
+    return m_c;
   }
 
  private:
