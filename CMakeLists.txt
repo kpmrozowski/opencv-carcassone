@@ -6,6 +6,12 @@ add_compile_options(-fconcepts)
 set(BUILD_GMOCK OFF)
 project( TWM )
 find_package( OpenCV REQUIRED )
+find_package(PythonLibs REQUIRED)
+find_package(Python2 COMPONENTS Interpreter NumPy)
+
+include_directories(${PYTHON_INCLUDE_DIRS})
+# include_directories("/usr/local/lib/python3.5/dist-packages/numpy/core/include")
+
 add_subdirectory(deps/gtest)
 add_subdirectory(deps/mb)
 add_subdirectory(deps/fmt)
