@@ -2,6 +2,7 @@
 #define TWM_HOUGH_H
 
 #include <Clasters/Clasters.h>
+#include <Utils/display.h>
 #include <fmt/core.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -61,13 +62,17 @@ cv::Mat detect_liness(const char *filename) {
 
   /* Loads an image */
   cv::Mat src1 = imread(cv::samples::findFile(filename), cv::IMREAD_GRAYSCALE);
-  int frame_width = src1.cols;
-  int frame_height = src1.rows;
-  float scale = .5;  // 2160. / frame_height;
+  int frame_width1 = src1.cols;
+  int frame_height1 = src1.rows;
+  float scale = 2.;  // 2160. / frame_height;
   cv::resize(src1, src,
-             cv::Size(static_cast<std::size_t>(frame_width * scale),
-                      static_cast<std::size_t>(frame_height * scale)));
+             cv::Size(static_cast<std::size_t>(frame_width1 * scale),
+                      static_cast<std::size_t>(frame_height1 * scale)));
+  int frame_width = src.cols;
+  int frame_height = src.rows;
 
+  // imshow("src", src);
+  // cv::waitKey();
   /* Check if image is loaded fine */
   if (src1.empty()) {
     printf(" Error opening image\n");
@@ -76,7 +81,7 @@ cv::Mat detect_liness(const char *filename) {
     return src1;
   }
 
-  auto canny_treshold1 = 350, canny_treshold2 = 350;
+  auto canny_treshold1 = 100, canny_treshold2 = 370;
   Lines lines;
   int maximum = 4, max_size = 0, size_old = 0;
   while (true) {
@@ -88,7 +93,7 @@ cv::Mat detect_liness(const char *filename) {
 
     // imshow("Canny", dst);
     // cv::waitKey();
-    dilate(dst, dst, cv::Mat(), cv::Point(-1, -1));
+    // dilate(dst, dst, cv::Mat(), cv::Point(-1, -1));
 
     /* Copy edges to the images that will display the results in BGR */
     cvtColor(dst, cdst, cv::COLOR_GRAY2BGR);
@@ -139,8 +144,10 @@ cv::Mat detect_liness(const char *filename) {
     auto size = linesPCoords.size();
     fmt::print("size = {},\t canny_treshold1 = {},\t canny_treshold2 = {}\n",
                size, canny_treshold1, canny_treshold2);
-    if (size < 1000 && size < size_old) {
+    if (size < 400 && size < size_old) {
       lines = Lines(linesPCoords);
+      display("Canny", dst);
+      // cv::waitKey();
       break;
     }
     size_old = size;
