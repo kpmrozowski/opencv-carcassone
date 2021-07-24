@@ -175,8 +175,8 @@ class LinesClasters {
       x.at(i) = m_pointLines.at(i).first.fi / M_PI * 180;
       y.at(i) = m_pointLines.at(i).second.fi / M_PI * 180;
     }
-    // matplotlibcpp::plot(x1, y1, "r.", x2, y2, "b.");
-    // matplotlibcpp::show();
+    matplotlibcpp::plot(x1, y1, "r.", x2, y2, "b.");
+    matplotlibcpp::show();
     matplotlibcpp::plot(x, y, "r.");
     matplotlibcpp::plot(y, x, "b.");
     matplotlibcpp::show();
