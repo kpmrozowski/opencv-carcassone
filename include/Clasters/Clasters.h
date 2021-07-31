@@ -249,7 +249,7 @@ class LinesClasters {
     hdbscan.execute(m_k, m_k, execution_type);
 
     hdbscan.displayResult();
-    // cout << "You can access other fields like cluster labels, membership probabilities and outlier scores."<<endl;
+    // std::endl << "You can access other fields like cluster labels, membership probabilities and outlier scores."<<endl;
     // Use it like this
     hdbscan.labels_;
     hdbscan.membershipProbabilities_;

@@ -5,9 +5,8 @@
 #include<set>
 #include<map>
 #include<cstdint>
-using namespace std;
 
-string Hdbscan::getFileName() {
+std::string Hdbscan::getFileName() {
 	return this->fileName;
 }
 /// <summary>
@@ -18,15 +17,15 @@ string Hdbscan::getFileName() {
 /// <returns>1 if successful, 0 otherwise</returns>
 
 int Hdbscan::loadCsv(int numberOfValues, bool skipHeader) {
-	string  attribute;
+	std::string  attribute;
 
-	string line = "";
+	std::string line = "";
 
 	int currentAttributes;
-	vector<vector<double> > dataset;
+	std::vector<std::vector<double> > dataset;
 
-	string fileName = this->getFileName();
-	ifstream file(fileName, ios::in);
+	std::string fileName = this->getFileName();
+	std::ifstream file(fileName, std::ios::in);
 	if (!file)
 		return 0;
 	if (skipHeader) {
@@ -34,8 +33,8 @@ int Hdbscan::loadCsv(int numberOfValues, bool skipHeader) {
 
 	}
 	while (getline(file, line)) {      //Read through each line
-		stringstream s(line);
-		vector<double> row;
+		std::stringstream s(line);
+		std::vector<double> row;
 		currentAttributes = numberOfValues;
 		while (getline(s, attribute, ',') && currentAttributes != 0) {
 			row.push_back(stod(attribute));
@@ -48,14 +47,14 @@ int Hdbscan::loadCsv(int numberOfValues, bool skipHeader) {
 	return 1;
 }
 
-void Hdbscan::execute(int minPoints, int minClusterSize, string distanceMetric) {
+void Hdbscan::execute(int minPoints, int minClusterSize, std::string distanceMetric) {
 	//Call The Runner Class here
 	hdbscanRunner runner;
 	hdbscanParameters parameters;
 	uint32_t noisyPoints = 0;
-	set<int> numClustersSet;
-	map<int, int> clustersMap;
-	vector<int> normalizedLabels;
+	std::set<int> numClustersSet;
+	std::map<int, int> clustersMap;
+	std::vector<int> normalizedLabels;
 
 	parameters.dataset = this->dataset;
 	parameters.minPoints = minPoints;
@@ -94,14 +93,14 @@ void Hdbscan::displayResult() {
 	hdbscanResult result = this->result;
 	uint32_t numClusters = 0;
 
-	cout << "HDBSCAN clustering for " << this->dataset.size() << " objects." << endl;
+	std::cout << "HDBSCAN clustering for " << this->dataset.size() << " objects." << std::endl;
 
 	for (uint32_t i = 0; i < result.labels.size(); i++) {
-		cout << result.labels[i] << " ";
+		std::cout << result.labels[i] << " ";
 	}
 
-	cout << endl << endl;
+	std::cout << std::endl << std::endl;
 
-	cout << "The Clustering contains " << this->numClusters_ << " clusters with " << this->noisyPoints_ << " noise Points." << endl;
+	std::cout << "The Clustering contains " << this->numClusters_ << " clusters with " << this->noisyPoints_ << " noise Points." << std::endl;
 
 }

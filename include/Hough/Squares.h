@@ -15,18 +15,17 @@
 
 namespace twm::hough {
 using namespace cv;
-using namespace std;
 
 const char* wndname = "Square Detection Demo";
 static void help(const char* programName)
 {
-    cout <<
+    std::cout <<
     "\nA program using pyramid scaling, Canny, contours and contour simplification\n"
     "to find squares in a list of images (pic1-6.png)\n"
     "Returns sequence of squares detected on the image.\n"
     "Call:\n"
     "./" << programName << " [file_name (optional)]\n"
-    "Using OpenCV version " << CV_VERSION << "\n" << endl;
+    "Using OpenCV version " << CV_VERSION << "\n" << std::endl;
 }
 // helper function:
 // finds a cosine of angle between vectors
@@ -53,7 +52,7 @@ static std::vector<std::vector<cv::Point> > findSquares_old1( const cv::Mat& ima
     if(first_tile) { display("pyrDown", pyr); }
     pyrUp(pyr, timg, image.size());
     if(first_tile) { display("pyrUp", timg); }
-    vector<vector<cv::Point> > contours;
+    std::vector<std::vector<cv::Point> > contours;
     int thresh = 10, nn = 8;
     unsigned int canny_treshold_A = 9000, canny_treshold_B = 7000;
     double contour_area = 10000.;
@@ -190,7 +189,7 @@ static std::vector<std::vector<cv::Point> > findSquares_old1( const cv::Mat& ima
         }
         if (c == 2 && squares.size() == 0) {
             // fmt::print("DETEKCJA NAWALILA! LUZOWANIE PARAMETROW...\n"); // drukuje jak ma czas
-            std::cout << "DETEKCJA NAWALILA! LUZOWANIE PARAMETROW..." << std::endl; // drukuje natychmiast
+            std::cout << "DETEKCJA NAWALILA! LUZOWANIE PARAMETROW..." <<  std::endl; // drukuje natychmiast
             c = 0;
             nn *= 1.2;
             canny_treshold_A *= 0.9;
@@ -205,7 +204,7 @@ static std::vector<std::vector<cv::Point> > findSquares_old1( const cv::Mat& ima
     return squares;
 }
 
-static std::vector<std::vector<cv::Point> > filter_squares(vector<vector<cv::Point> > contours) {
+static std::vector<std::vector<cv::Point> > filter_squares(std::vector<std::vector<cv::Point> > contours) {
     std::vector< std::vector<cv::Point> > squares;
 
     return squares;
@@ -235,7 +234,7 @@ static std::vector<std::vector<cv::Point> > findSquares_old2( const cv::Mat& ima
     cv::resize(timg, timg, cv::Size(static_cast<std::size_t>(image_width * scale), static_cast<std::size_t>(image_height * scale)));
     cv::resize(img_gray, img_gray, cv::Size(static_cast<std::size_t>(image_width * scale), static_cast<std::size_t>(image_height * scale)));
 
-    vector<vector<cv::Point> > contours;
+    std::vector<std::vector<cv::Point> > contours;
     int tresh = 1;
     double contour_area = 10000.;
     double maxCosine_tolerance = 0.1;
@@ -390,7 +389,7 @@ static std::vector<std::vector<cv::Point> > findSquares( const cv::Mat& image, u
     cv::resize(timg, timg, cv::Size(static_cast<std::size_t>(image_width * scale), static_cast<std::size_t>(image_height * scale)));
     cv::resize(img_gray, img_gray, cv::Size(static_cast<std::size_t>(image_width * scale), static_cast<std::size_t>(image_height * scale)));
 
-    vector<vector<cv::Point> > contours;
+    std::vector<std::vector<cv::Point> > contours;
     int tresh = 1;
     double contour_area = 10000.;
     double maxCosine_tolerance = 0.1;

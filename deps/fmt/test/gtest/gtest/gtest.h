@@ -2818,7 +2818,7 @@ class GTEST_API_ Message {
   // and wide streams, we have to provide this specialized definition
   // of operator <<, even though its body is the same as the
   // templatized version above.  Without this definition, streaming
-  // endl or other basic IO manipulators to Message will confuse the
+  //std::endl or other basic IO manipulators to Message will confuse the
   // compiler.
   Message& operator <<(BasicNarrowIoManip val) {
     *ss_ << val;

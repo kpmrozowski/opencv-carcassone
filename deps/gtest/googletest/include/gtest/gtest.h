@@ -342,7 +342,7 @@ class GTEST_API_ AssertionResult {
     return *this;
   }
 
-  // Allows streaming basic output manipulators such as endl or flush into
+  // Allows streaming basic output manipulators such asstd::endl or flush into
   // this object.
   AssertionResult& operator<<(
       ::std::ostream& (*basic_manipulator)(::std::ostream& stream)) {

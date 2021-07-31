@@ -2,7 +2,6 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 #include <iostream>
-using namespace std;
 using namespace cv;
 int main(int argc, char *argv[])
 {
@@ -12,8 +11,8 @@ int main(int argc, char *argv[])
     src = cv::imread( cv::samples::findFile( "/home/kmro/Documents/pw_eiti/twm/test_set_color/test_02.jpg" ), cv::IMREAD_COLOR );
     if( src.empty() )
     {
-        cout << "Could not open or find the image!\n" << endl;
-        cout << "Usage: " << argv[0] << " <Input image>" << endl;
+        std::cout << "Could not open or find the image!\n" << std::endl;
+        std::cout << "Usage: " << argv[0] << " <Input image>" << std::endl;
         return -1;
     }
     // Show the source image
@@ -70,7 +69,7 @@ int main(int argc, char *argv[])
     Mat dist_8u;
     dist.convertTo(dist_8u, CV_8U);
     // Find total markers
-    vector<vector<Point> > contours;
+    std::vector<std::vector<Point> > contours;
     findContours(dist_8u, contours, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
     // Create the marker image for the watershed algorithm
     Mat markers = Mat::zeros(dist.size(), CV_32S);
@@ -92,7 +91,7 @@ int main(int argc, char *argv[])
     //    imshow("Markers_v2", mark); // uncomment this if you want to see how the mark
     // image looks like at that point
     // Generate random colors
-    vector<Vec3b> colors;
+    std::vector<Vec3b> colors;
     for (size_t i = 0; i < contours.size(); i++)
     {
         int b = theRNG().uniform(0, 256);
