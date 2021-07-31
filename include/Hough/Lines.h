@@ -12,9 +12,8 @@
 #include "Square.h"
 using size_t = std::size_t;
 using vus = std::vector<size_t>;
-using count = size_t;
 using pivot_angle = double;
-using Histogram = std::vector<std::pair<pivot_angle, count>>;
+using Histogram = std::vector<std::pair<pivot_angle, size_t>>;
 
 /* a function to generate numpy linspace */
 template <typename T>

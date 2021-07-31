@@ -8,10 +8,12 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <string>
 #include <limits>
 #include <vector>
 #include <numeric>
 #include <fmt/core.h>
+#include <HDBSCAN_CPP/Hdbscan/hdbscan.hpp>
 // #include "Square.h"
 #define _USE_MATH_DEFINES
 using PointLines = std::vector<std::pair<Point<double>, Point<double>>>;
@@ -19,9 +21,22 @@ using PointLines = std::vector<std::pair<Point<double>, Point<double>>>;
 class LinesClasters {
  public:
   PointLines m_pointLines;
+  size_t m_size;
+  int m_k = 6;
+  std::vector<std::vector<double>> m_distances_table, m_sorted_distances_table, m_mutual_reachability_distances_table;
+  std::vector<double> m_core_distances;
   
-  LinesClasters(std::vector<Line> linesvec, int img_rows, int img_cols) {
+  LinesClasters(std::vector<Line> linesvec, int img_rows, int img_cols)
+   : m_size(linesvec.size())
+   , m_distances_table(std::vector<std::vector<double>>(m_size, std::vector<double>(m_size, -1.)))
+   , m_core_distances(m_size, -1.)
+   , m_mutual_reachability_distances_table(std::vector<std::vector<double>>(m_size, std::vector<double>(m_size, -1.))) {
     twolinesClaster(linesvec, img_rows, img_cols);
+    display_dataset();
+    get_statistics();
+    calculate_core_distances();
+    calculate_mutual_reachability_distance();
+    apply_HDBSCAN();
   }
 
   void print() {
@@ -69,7 +84,9 @@ class LinesClasters {
   }
 
   void twolinesClaster(std::vector<Line> linesvec, int img_rows, int img_cols) {
-    auto size = linesvec.size();
+    /*###################################################
+    #         Lines to angle pairs conversion           #
+    ###################################################*/
     // circle coeffictients
     const double x_o = img_rows / 2.;
     const double y_o = img_cols / 2.;
@@ -89,8 +106,6 @@ class LinesClasters {
       
       // distance from line to center of circle
       const double d_0 = abs(c) / sqrt(pow(a, 2) + pow(b, 2));
-      //
-
       // coordinate x of the point belonging to the line closest to the center of the circle
       const double x_0 = - a * c / (pow(a, 2) + pow(b, 2));
       // coordinate y of the point belonging to the line closest to the center of the circle
@@ -126,30 +141,58 @@ class LinesClasters {
       }
       m_pointLines.emplace_back(Point(ax, ay, aro, afi), Point(bx, by, bro, bfi));
     }
-    std::vector<std::vector<double>> distances_table{size, std::vector<double>(size, -1.)};
-    for (int i = 0; i < size; ++i) {
-      for (int j = 0; j < size; ++j) {
-        distances_table.at(i).at(j) = sqrt(
+  }
+
+  void display_dataset() {
+    /*###################################################
+    #                 The gained dataset                #
+    ###################################################*/
+    std::vector<double> x(m_size, -1), y(m_size, -1), x1(m_size, -1), y1(m_size, -1), x2(m_size, -1), y2(m_size, -1);
+    for (int i = 0; i < m_size; ++i) {
+      x1.at(i) = m_pointLines.at(i).first.x;
+      y1.at(i) = m_pointLines.at(i).first.y;
+      x2.at(i) = m_pointLines.at(i).second.x;
+      y2.at(i) = m_pointLines.at(i).second.y;
+      x.at(i) = m_pointLines.at(i).first.fi / M_PI * 180;
+      y.at(i) = m_pointLines.at(i).second.fi / M_PI * 180;
+    }
+    matplotlibcpp::plot(x1, y1, "r.", x2, y2, "b.");
+    matplotlibcpp::show();
+    matplotlibcpp::plot(x, y, "r.");
+    matplotlibcpp::plot(y, x, "b.");
+    matplotlibcpp::show();
+    this->print();
+    double zz = 1.;
+  }
+
+  void get_statistics() {
+    /*###################################################
+    #         sorted distances, means, medians          #
+    ###################################################*/
+    for (int i = 0; i < m_size; ++i) {
+      for (int j = 0; j < m_size; ++j) {
+        m_distances_table.at(i).at(j) = sqrt(
             pow(m_pointLines.at(i).first.fi - m_pointLines.at(j).first.fi, 2) +
             pow(m_pointLines.at(i).second.fi - m_pointLines.at(j).second.fi,
                 2));
       }
     }
-    auto sorted_distances_table{distances_table};
-    std::vector<std::vector<long unsigned int>> permutations_table{size, std::vector<long unsigned int>(size, -1)};
-    std::vector<double> means(size, -1.);
-    std::vector<double> medians(size, -1.);
-    for (int i = 0; i < size; ++i) {// std::vector<double>& distances : sorted_distances_table) {
-      auto distances{sorted_distances_table.at(i)};
+    m_sorted_distances_table = m_distances_table;
+    std::vector<std::vector<long unsigned int>> permutations_table{m_size, std::vector<long unsigned int>(m_size, -1)};
+    std::vector<double> means(m_size, -1.);
+    std::vector<double> medians(m_size, -1.);
+    std::vector<double> mutual_reachability_distance(m_size, -1.);
+    for (int i = 0; i < m_size; ++i) {// std::vector<double>& distances : m_sorted_distances_table) {
+      auto distances{m_sorted_distances_table.at(i)};
       auto p = find_permutation(
           distances,
           [](double a, double b) {
             return a < b;
           });
       permutations_table.at(i) = p;
-      means.at(i) = std::accumulate(distances.begin(), distances.end(), 0.) / static_cast<double>(size);
-      medians.at(i) = distances.at(size / 2);
-      apply_permutation_in_place(sorted_distances_table.at(i), p);
+      means.at(i) = std::accumulate(distances.begin(), distances.end(), 0.) / static_cast<double>(m_size);
+      medians.at(i) = distances.at(m_size / 2);
+      apply_permutation_in_place(m_sorted_distances_table.at(i), p);
     }
     auto p_means = find_permutation(
           means,
@@ -163,26 +206,59 @@ class LinesClasters {
           });
     apply_permutation_in_place(means, p_means);
     apply_permutation_in_place(medians, p_medians);
+  }
+  
+  /** @brief calculate core distances */
+  void calculate_core_distances() {
+    std::transform(m_sorted_distances_table.begin(), m_sorted_distances_table.end(), m_core_distances.begin(), [this](const std::vector<double>& distances) {
+      return distances.at(this->m_k);
+    });
+    printf("\n");
+  }
 
-    // vectorA = apply_permutation(vectorA, p);
-    // vectorB = apply_permutation(vectorB, p);
-    std::vector<double> x(size, -1), y(size, -1), x1(size, -1), y1(size, -1), x2(size, -1), y2(size, -1);
-    for (int i = 0; i < size; ++i) {
-      x1.at(i) = m_pointLines.at(i).first.x;
-      y1.at(i) = m_pointLines.at(i).first.y;
-      x2.at(i) = m_pointLines.at(i).second.x;
-      y2.at(i) = m_pointLines.at(i).second.y;
-      x.at(i) = m_pointLines.at(i).first.fi / M_PI * 180;
-      y.at(i) = m_pointLines.at(i).second.fi / M_PI * 180;
+  void calculate_mutual_reachability_distance() {
+    // for (auto p1 = m_distances_table.begin(); p1 != m_distances_table.end(); ++p1)
+      // for (auto p2 = m_distances_table.begin(); p2 != m_distances_table.end(); ++p2)
+    for (int i = 0; i < m_size; ++i)
+      for (int j = 0; j < m_size; ++j) {
+        auto a = m_distances_table.at(i).at(j);
+        auto b = m_core_distances.at(i);
+        auto c = m_core_distances.at(j);
+        m_mutual_reachability_distances_table.at(i).at(j) = std::max(std::max(a, b), c);
+      }
+    // std::transform(m_distances_table.begin(), m_distances_table.end(), m_core_distances.begin(), m_mutual_reachability_distances_table.begin(), [](const std::vector<double>& distances) {
+    //   std::vector<double> mutual_reachability_distances(m_size, -1.);
+    //   return std::max(std::max(a, b), c);
+    // });
+    printf("\n");
+
+  }
+
+  /** @brief Hierarchical Density-Based Spatial Clustering of Applications with Noise */
+  void apply_HDBSCAN() {
+    std::vector<std::vector<double>> dataset; //(m_size, std::vector<double>(m_size, -1.));
+    for (int i = 0; i < m_size; ++i) {
+      std::vector<double> point(2);
+      point.at(0) = m_pointLines.at(i).first.fi / M_PI * 180;
+      point.at(1) = m_pointLines.at(i).second.fi / M_PI * 180;
+      dataset.push_back(point);
     }
-    matplotlibcpp::plot(x1, y1, "r.", x2, y2, "b.");
-    matplotlibcpp::show();
-    matplotlibcpp::plot(x, y, "r.");
-    matplotlibcpp::plot(y, x, "b.");
-    matplotlibcpp::show();
+    Hdbscan hdbscan;
+    hdbscan.dataset = dataset;
+    std::string execution_type{"Euclidean"};
+    hdbscan.execute(m_k, m_k, execution_type);
 
-    this->print();
-    double zz = 1.;
+    hdbscan.displayResult();
+    // cout << "You can access other fields like cluster labels, membership probabilities and outlier scores."<<endl;
+    // Use it like this
+    hdbscan.labels_;
+    hdbscan.membershipProbabilities_;
+    hdbscan.outlierScores_;
+    printf("\n");
+    //
+    /*###################################################
+    #     Experimental Probability Density Function     #
+    ###################################################*/
   }
 };
 
