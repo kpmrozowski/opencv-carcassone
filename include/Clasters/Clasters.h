@@ -25,6 +25,7 @@ class LinesClasters {
   int m_k = 6;
   std::vector<std::vector<double>> m_distances_table, m_sorted_distances_table, m_mutual_reachability_distances_table;
   std::vector<double> m_core_distances;
+  std::vector<Line> m_linesvec;
   
   LinesClasters(std::vector<Line> linesvec, int img_rows, int img_cols)
    : m_size(linesvec.size())
@@ -37,6 +38,7 @@ class LinesClasters {
     calculate_core_distances();
     calculate_mutual_reachability_distance();
     apply_HDBSCAN();
+    get_lines_back_from_clusters();
   }
 
   void print() {
@@ -83,6 +85,10 @@ class LinesClasters {
     }
   }
 
+  /** \brief The method creates dataset to be clustered in 3 steps:
+   * 1. Creates a circle on the picture vertices. 
+   * 2. Finds corossection points of lines from 'linesvec' with the circle. 
+   * 3. Represents each point by an angle. Each line creates two points so is represented by two angles. These pairs of angles are cooridinates of new points that are going to by clustered via 'apply_HDBSCAN' method. */
   void twolinesClaster(std::vector<Line> linesvec, int img_rows, int img_cols) {
     /*###################################################
     #         Lines to angle pairs conversion           #
@@ -165,10 +171,8 @@ class LinesClasters {
     double zz = 1.;
   }
 
+  /** @brief sorted distances, means, medians */
   void get_statistics() {
-    /*###################################################
-    #         sorted distances, means, medians          #
-    ###################################################*/
     for (int i = 0; i < m_size; ++i) {
       for (int j = 0; j < m_size; ++j) {
         m_distances_table.at(i).at(j) = sqrt(
@@ -216,9 +220,8 @@ class LinesClasters {
     printf("\n");
   }
 
+  /** @brief calculate mutual reachability distances */
   void calculate_mutual_reachability_distance() {
-    // for (auto p1 = m_distances_table.begin(); p1 != m_distances_table.end(); ++p1)
-      // for (auto p2 = m_distances_table.begin(); p2 != m_distances_table.end(); ++p2)
     for (int i = 0; i < m_size; ++i)
       for (int j = 0; j < m_size; ++j) {
         auto a = m_distances_table.at(i).at(j);
@@ -226,12 +229,7 @@ class LinesClasters {
         auto c = m_core_distances.at(j);
         m_mutual_reachability_distances_table.at(i).at(j) = std::max(std::max(a, b), c);
       }
-    // std::transform(m_distances_table.begin(), m_distances_table.end(), m_core_distances.begin(), m_mutual_reachability_distances_table.begin(), [](const std::vector<double>& distances) {
-    //   std::vector<double> mutual_reachability_distances(m_size, -1.);
-    //   return std::max(std::max(a, b), c);
-    // });
     printf("\n");
-
   }
 
   /** @brief Hierarchical Density-Based Spatial Clustering of Applications with Noise */
@@ -255,10 +253,10 @@ class LinesClasters {
     hdbscan.membershipProbabilities_;
     hdbscan.outlierScores_;
     printf("\n");
-    //
-    /*###################################################
-    #     Experimental Probability Density Function     #
-    ###################################################*/
+  }
+
+  void get_lines_back_from_clusters() {
+    ;
   }
 };
 
