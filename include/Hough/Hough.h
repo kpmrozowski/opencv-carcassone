@@ -169,11 +169,11 @@ cv::Mat detect_liness(const char *filename) {
 
   // Lines filteredLines = lines.GetHVlinesSimple(5);
   std::vector<Line> kMeansLines1, kMeansLines2;
-  std::tie(kMeansLines1, kMeansLines2) = lines.GetHVkMeans(18);
+  //// std::tie(kMeansLines1, kMeansLines2) = lines.GetHVkMeans(18);
 
-  Lines filteredLines = lines.GetHVlines();
-  fmt::print("Found {} lines\n\n", lines.m_linesvec.size());
-  fmt::print("Detected {} lines\n\n", filteredLines.m_linesvec.size());
+  //// Lines filteredLines = lines.GetHVlines();
+  //// fmt::print("Found {} lines\n\n", lines.m_linesvec.size());
+  //// fmt::print("Detected {} lines\n\n", filteredLines.m_linesvec.size());
   // filteredLines.findPairs();
   // filteredLines.print();
   // std::cout << "m_pararrel_pairs.size = " << lines.m_pararrel_pairs.size() <<
@@ -188,7 +188,7 @@ cv::Mat detect_liness(const char *filename) {
   for (auto line : lines.m_linesvec) {
     line.draw(cdstP, 0, 0, 255);
   }
-  for (auto line : filteredLines.m_linesvec) {
+  for (auto line : linesClasters.m_result) {
     // line.print();
     line.draw(cdstP, 255, 0, 0);
   }
