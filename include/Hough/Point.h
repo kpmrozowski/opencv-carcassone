@@ -14,6 +14,12 @@ struct Point {
   inline bool operator==(const Point &p) {
     return p.x == this->x && p.y == this->y;
   }
+  Point(Line l1, Line l2) {
+    x = (l1.b() * l2.c() - l2.b() * l1.c()) / (l1.a() * l2.b() - l2.a() * l1.b());
+    y = (l1.c() * l2.a() - l2.c() * l1.a()) / (l1.a() * l2.b() - l2.a() * l1.b());
+    ro = pow(pow(x, 2) + pow(y, 2), 0.5);
+    fi = atan2(y, x);
+  }
 };
 
 #endif

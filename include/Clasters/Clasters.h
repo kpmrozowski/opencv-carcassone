@@ -4,11 +4,12 @@
 #include <Hough/Line.h>
 #include <Hough/Point.h>
 #include <Utils/matplotlibcpp.h>
-
+#include <cstdlib>
+#include <time.h>
 #include <algorithm>
 #include <cmath>
 #include <iostream>
-#include <string>
+#include <cstring>
 #include <limits>
 #include <vector>
 #include <numeric>
@@ -42,12 +43,13 @@ class LinesClasters {
    , m_core_distances(m_size, -1.)
    , m_mutual_reachability_distances_table(std::vector<std::vector<double>>(m_size, std::vector<double>(m_size, -1.))) {
     twolinesClaster(linesvec, img_rows, img_cols);
-    display_dataset();
+    // display_pointlines();
     get_statistics();
     calculate_core_distances();
     calculate_mutual_reachability_distance();
     apply_HDBSCAN();
     get_lines_back_from_clasters();
+    // filter_outliers();
   }
 
   void print() {
@@ -153,7 +155,14 @@ class LinesClasters {
     }
   }
 
-  void display_dataset() {
+  const std::map<std::string, std::string> random_color() {
+    std::string hex_char = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
+    std::string hex{'#'};
+    for (int i = 0; i < 6; ++i) { hex += hex_char[rand()%16]; }
+    return std::map<std::string, std::string>{ {"color", hex.c_str() } };
+  }
+
+  void display_pointlines() {
     /*###################################################
     #                 The gained dataset                #
     ###################################################*/
@@ -166,13 +175,28 @@ class LinesClasters {
       x.at(i) = m_pointLines.at(i).first.fi / M_PI * 180;
       y.at(i) = m_pointLines.at(i).second.fi / M_PI * 180;
     }
-    matplotlibcpp::plot(x1, y1, "r.", x2, y2, "b.");
+    // matplotlibcpp::plot(x1, y1, "tab:blue", x2, y2, "tab:red");
+    // std::map<std::string, std::string> keyword1{ {"color", "xkcd:baby poop green"} };
+    matplotlibcpp::scatter(x1, y1, 5.0, random_color());
+    matplotlibcpp::scatter(x2, y2, 5.0, random_color());
     matplotlibcpp::show();
     matplotlibcpp::plot(x, y, "r.");
     matplotlibcpp::plot(y, x, "b.");
     matplotlibcpp::show();
     this->print();
     double zz = 1.;
+  }
+
+  void display_clusters(std::vector<std::vector<std::vector<double>>> clasters_vect) {
+    for (const auto& claster : clasters_vect) {
+      std::vector<double> x(claster.size()), y(claster.size());
+      for (int i = 0; i < claster.size(); ++i) {
+        x.at(i) = claster.at(i).at(0);
+        y.at(i) = claster.at(i).at(1);
+      }
+      matplotlibcpp::scatter(x, y, 5.0, random_color());
+    }
+    matplotlibcpp::show();
   }
 
   /** @brief sorted distances, means, medians */
@@ -275,8 +299,8 @@ class LinesClasters {
         ++clasters_sizes.at(idx);
       } else 
         printf("!!! %d>%d !!!\n", idx + 1, clasters_count);
-      ;
     }
+    display_clusters(clasters_vect);
     // 2. get x1, y1, x2, y2 coordinates corresponding to each of those angles and put these points into LinesVec
     std::vector<std::vector<double>> clasters_means(clasters_count, std::vector<double>(2));
     m_result.reserve(clasters_count);
@@ -293,10 +317,79 @@ class LinesClasters {
       y2 = m_r_o * sin(fi2_mean / 180. * M_PI) + m_y_o;
       m_result.emplace_back(cv::Point(x1, y1), cv::Point(x2, y2));
     }
-
-    
     printf("\n");
     ;
+  }
+
+  void filter_outliers() {
+    auto size = (m_result.size() + 1) / 2;
+    int k = 3, m = 3;
+    std::vector<Point<double>> intersections;
+    std::vector<std::vector<double>> dataset;
+    intersections.reserve(size);
+    dataset.reserve(size);
+    for (int i = 1; i < size; ++i) {
+      Line line1 = m_result.at(i);
+      for (int j = 0; j < i; ++j) {
+        Line line2 = m_result.at(j);
+        intersections.emplace_back(line1, line2);
+        // [i * (i - 1) / 2 + j] = Point(line1, line2);
+      }
+    }
+    for (int i = 0; i < size; ++i) {
+      std::vector<double> point(2);
+      point.at(0) = intersections.at(i).x;
+      point.at(1) = intersections.at(i).y;
+      dataset.push_back(point);
+    }
+    Hdbscan hdbscan;
+    hdbscan.dataset = dataset;
+    std::string execution_type{"Euclidean"};
+    int clasters_count = 0;
+    while (clasters_count != 2) {
+      hdbscan.execute(k, m, execution_type);
+      hdbscan.displayResult();
+      clasters_count = *(std::max_element(hdbscan.normalizedLabels_.begin(), hdbscan.normalizedLabels_.end()));
+      if (clasters_count > 2) {
+        ++k;
+      } else {
+        --k;
+      }
+    }
+    
+    std::vector<std::vector<std::vector<double>>> clasters_vect(clasters_count);
+    std::vector<std::vector<double>> clasters_sums(clasters_count, std::vector<double>(2, 0));
+    std::vector<int> clasters_sizes(clasters_count, 0);
+    for (int i = 0; i < m_size; ++i) {
+      int idx = hdbscan.normalizedLabels_.at(i) - 1;
+      if (idx == -2 || idx == -1) {
+        continue;
+      } else if (idx < clasters_count) {
+        clasters_vect.at(idx).push_back(m_dataset.at(i));
+        clasters_sums.at(idx).at(0) += m_dataset.at(i).at(0);
+        clasters_sums.at(idx).at(1) += m_dataset.at(i).at(1);
+        ++clasters_sizes.at(idx);
+      } else 
+        printf("!!! %d>%d !!!\n", idx + 1, clasters_count);
+    }
+    // 2. get x1, y1, x2, y2 coordinates corresponding to each of those angles and put these points into LinesVec
+    std::vector<std::vector<double>> clasters_means(clasters_count, std::vector<double>(2));
+    m_result.reserve(clasters_count);
+    for (int i = 0; i < clasters_count; ++i) {
+      auto fi1_mean = clasters_sums.at(i).at(0) / static_cast<double>(clasters_sizes.at(i));
+      auto fi2_mean = clasters_sums.at(i).at(1) / static_cast<double>(clasters_sizes.at(i));
+      // clasters_means.emplace_back(std::vector<double>{fi1_mean, fi2_mean});
+      clasters_means.at(i).at(0) = fi1_mean;
+      clasters_means.at(i).at(1) = fi2_mean;
+    }
+
+
+
+    hdbscan.labels_;
+    hdbscan.membershipProbabilities_;
+    hdbscan.outlierScores_;
+    printf("\n");
+
   }
 };
 
