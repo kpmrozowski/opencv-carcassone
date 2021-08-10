@@ -46,6 +46,17 @@ class Line {
     calculateAngle();
     calculateRho();
   }
+  Line& operator=(Line other) {
+    m_coords = other.m_coords;
+    m_angle = other.m_angle;
+    m_rho = other.m_rho;
+    m_a = other.m_a;
+    m_b = other.m_b;
+    m_c = other.m_c;
+    m_p1 = other.m_p1;
+    m_p2 = other.m_p2;
+    return *this;
+  }
 
   constexpr const double rho() const noexcept { return m_rho; }
   constexpr const double angle() const noexcept { return m_angle; }

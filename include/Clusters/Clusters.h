@@ -1,7 +1,8 @@
-#ifndef CLASTERS_H
-#define CLASTERS_H
+#ifndef CLUSTERS_H
+#define CLUSTERS_H
 
 #include <Hough/Line.h>
+#include <Hough/Lines.h>
 #include <Hough/Point.h>
 #include <Utils/matplotlibcpp.h>
 #include <cstdlib>
@@ -17,9 +18,13 @@
 #include <HDBSCAN_CPP/Hdbscan/hdbscan.hpp>
 // #include "Square.h"
 #define _USE_MATH_DEFINES
+#define CORE_POINTS 16       // the number of points to compute core distance
+#define MIN_CLUSTER_SIZE 3
+#define POINT_SIZE 5
+
 using PointLines = std::vector<std::pair<Point<double>, Point<double>>>;
 
-class LinesClasters {
+class LinesClusters {
  public:
   PointLines m_pointLines;
   size_t m_size;
@@ -34,7 +39,7 @@ class LinesClasters {
   std::vector<std::vector<double>> m_dataset;
   std::vector<Line> m_result;
   
-  LinesClasters(std::vector<Line> linesvec, int img_rows, int img_cols)
+  LinesClusters(std::vector<Line> linesvec, int img_rows, int img_cols)
    : m_size(linesvec.size())
    , m_x_o(img_rows / 2.)
    , m_y_o(img_cols / 2.)
@@ -42,14 +47,12 @@ class LinesClasters {
    , m_distances_table(std::vector<std::vector<double>>(m_size, std::vector<double>(m_size, -1.)))
    , m_core_distances(m_size, -1.)
    , m_mutual_reachability_distances_table(std::vector<std::vector<double>>(m_size, std::vector<double>(m_size, -1.))) {
-    twolinesClaster(linesvec, img_rows, img_cols);
+    twolinesCluster(linesvec, img_rows, img_cols);
     // display_pointlines();
     get_statistics();
-    calculate_core_distances();
-    calculate_mutual_reachability_distance();
     apply_HDBSCAN();
-    get_lines_back_from_clasters();
-    // filter_outliers();
+    get_lines_back_from_clusters();
+    filter_outliers();
   }
 
   void print() {
@@ -100,7 +103,7 @@ class LinesClasters {
    * 1. Creates a circle on the picture vertices. 
    * 2. Finds corossection points of lines from 'linesvec' with the circle. 
    * 3. Represents each point by an angle. Each line creates two points so is represented by two angles. These pairs of angles are cooridinates of new points that are going to by clustered via 'apply_HDBSCAN' method. */
-  void twolinesClaster(std::vector<Line> linesvec, int img_rows, int img_cols) {
+  void twolinesCluster(std::vector<Line> linesvec, int img_rows, int img_cols) {
     /*###################################################
     #         Lines to angle pairs conversion           #
     ###################################################*/
@@ -154,7 +157,11 @@ class LinesClasters {
       m_pointLines.emplace_back(Point(ax, ay, aro, afi), Point(bx, by, bro, bfi));
     }
   }
-
+  /**
+   * @brief Randomly choose a color for a cluster. 
+   * For all colors check: https://stackoverflow.com/questions/22408237/named-colors-in-matplotlib 
+   * @return a map of "color" and hex
+    */
   const std::map<std::string, std::string> random_color() {
     std::string hex_char = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
     std::string hex{'#'};
@@ -175,8 +182,6 @@ class LinesClasters {
       x.at(i) = m_pointLines.at(i).first.fi / M_PI * 180;
       y.at(i) = m_pointLines.at(i).second.fi / M_PI * 180;
     }
-    // matplotlibcpp::plot(x1, y1, "tab:blue", x2, y2, "tab:red");
-    // std::map<std::string, std::string> keyword1{ {"color", "xkcd:baby poop green"} };
     matplotlibcpp::scatter(x1, y1, 5.0, random_color());
     matplotlibcpp::scatter(x2, y2, 5.0, random_color());
     matplotlibcpp::show();
@@ -187,14 +192,19 @@ class LinesClasters {
     double zz = 1.;
   }
 
-  void display_clusters(std::vector<std::vector<std::vector<double>>> clasters_vect) {
-    for (const auto& claster : clasters_vect) {
-      std::vector<double> x(claster.size()), y(claster.size());
-      for (int i = 0; i < claster.size(); ++i) {
-        x.at(i) = claster.at(i).at(0);
-        y.at(i) = claster.at(i).at(1);
+  void display_clusters(std::vector<std::vector<std::vector<double>>> clusters_vect) {
+    int i = 0;
+    for (const auto& cluster : clusters_vect) {
+      std::vector<double> x(cluster.size()), y(cluster.size());
+      for (int i = 0; i < cluster.size(); ++i) {
+        x.at(i) = cluster.at(i).at(0);
+        y.at(i) = cluster.at(i).at(1);
       }
-      matplotlibcpp::scatter(x, y, 5.0, random_color());
+      if (i++) {
+        matplotlibcpp::scatter(x, y, 5.0, random_color());
+      } else {
+        matplotlibcpp::scatter(x, y, 5.0, std::map<std::string, std::string>{ {"color", "lightgray"} });
+      }
     }
     matplotlibcpp::show();
   }
@@ -214,7 +224,7 @@ class LinesClasters {
     std::vector<double> means(m_size, -1.);
     std::vector<double> medians(m_size, -1.);
     std::vector<double> mutual_reachability_distance(m_size, -1.);
-    for (int i = 0; i < m_size; ++i) {// std::vector<double>& distances : m_sorted_distances_table) {
+    for (int i = 0; i < m_size; ++i) {
       auto distances{m_sorted_distances_table.at(i)};
       auto p = find_permutation(
           distances,
@@ -239,26 +249,6 @@ class LinesClasters {
     apply_permutation_in_place(means, p_means);
     apply_permutation_in_place(medians, p_medians);
   }
-  
-  /** @brief calculate core distances */
-  void calculate_core_distances() {
-    std::transform(m_sorted_distances_table.begin(), m_sorted_distances_table.end(), m_core_distances.begin(), [this](const std::vector<double>& distances) {
-      return distances.at(this->m_k);
-    });
-    printf("\n");
-  }
-
-  /** @brief calculate mutual reachability distances */
-  void calculate_mutual_reachability_distance() {
-    for (int i = 0; i < m_size; ++i)
-      for (int j = 0; j < m_size; ++j) {
-        auto a = m_distances_table.at(i).at(j);
-        auto b = m_core_distances.at(i);
-        auto c = m_core_distances.at(j);
-        m_mutual_reachability_distances_table.at(i).at(j) = std::max(std::max(a, b), c);
-      }
-    printf("\n");
-  }
 
   /** @brief Hierarchical Density-Based Spatial Clustering of Applications with Noise */
   void apply_HDBSCAN() {
@@ -270,7 +260,7 @@ class LinesClasters {
     }
     m_hdbscan.dataset = m_dataset;
     std::string execution_type{"Euclidean"};
-    m_hdbscan.execute(m_k, m_k, execution_type);
+    m_hdbscan.execute(CORE_POINTS, MIN_CLUSTER_SIZE, execution_type);
 
     m_hdbscan.displayResult();
     // std::endl << "You can access other fields like cluster labels, membership probabilities and outlier scores."<<endl;
@@ -281,35 +271,31 @@ class LinesClasters {
     printf("\n");
   }
 
-  void get_lines_back_from_clasters() {
-    // 1. claculate mean of each claster (receive two angles from each)
-    
-    int clasters_count = *(std::max_element(m_hdbscan.normalizedLabels_.begin(), m_hdbscan.normalizedLabels_.end()));
-    std::vector<std::vector<std::vector<double>>> clasters_vect(clasters_count);
-    std::vector<std::vector<double>> clasters_sums(clasters_count, std::vector<double>(2, 0));
-    std::vector<int> clasters_sizes(clasters_count, 0);
+  void get_lines_back_from_clusters() {
+    // 1. claculate mean of each cluster (receive two angles from each)
+
+    int clusters_count = *(std::max_element(m_hdbscan.normalizedLabels_.begin(), m_hdbscan.normalizedLabels_.end())) + 1;
+    std::vector<std::vector<std::vector<double>>> clusters_vect(clusters_count);
+    std::vector<std::vector<double>> clusters_sums(clusters_count, std::vector<double>(2, 0));
+    std::vector<std::vector<double>> clusters_means(clusters_count, std::vector<double>(2));
+    std::vector<int> clusters_sizes(clusters_count, 0);
     for (int i = 0; i < m_size; ++i) {
-      int idx = m_hdbscan.normalizedLabels_.at(i) - 1;
-      if (idx == -2 || idx == -1) {
-        continue;
-      } else if (idx < clasters_count) {
-        clasters_vect.at(idx).push_back(m_dataset.at(i));
-        clasters_sums.at(idx).at(0) += m_dataset.at(i).at(0);
-        clasters_sums.at(idx).at(1) += m_dataset.at(i).at(1);
-        ++clasters_sizes.at(idx);
-      } else 
-        printf("!!! %d>%d !!!\n", idx + 1, clasters_count);
+      int idx = m_hdbscan.normalizedLabels_.at(i);
+      if (idx == -1) ++idx;
+      clusters_vect.at(idx).push_back(m_dataset.at(i));
+      clusters_sums.at(idx).at(0) += m_dataset.at(i).at(0);
+      clusters_sums.at(idx).at(1) += m_dataset.at(i).at(1);
+      ++clusters_sizes.at(idx);
     }
-    display_clusters(clasters_vect);
+    display_clusters(clusters_vect);
     // 2. get x1, y1, x2, y2 coordinates corresponding to each of those angles and put these points into LinesVec
-    std::vector<std::vector<double>> clasters_means(clasters_count, std::vector<double>(2));
-    m_result.reserve(clasters_count);
-    for (int i = 0; i < clasters_count; ++i) {
-      auto fi1_mean = clasters_sums.at(i).at(0) / static_cast<double>(clasters_sizes.at(i));
-      auto fi2_mean = clasters_sums.at(i).at(1) / static_cast<double>(clasters_sizes.at(i));
-      // clasters_means.emplace_back(std::vector<double>{fi1_mean, fi2_mean});
-      clasters_means.at(i).at(0) = fi1_mean;
-      clasters_means.at(i).at(1) = fi2_mean;
+    m_result.reserve(clusters_count);
+    for (int i = 0; i < clusters_count; ++i) {
+      auto fi1_mean = clusters_sums.at(i).at(0) / static_cast<double>(clusters_sizes.at(i));
+      auto fi2_mean = clusters_sums.at(i).at(1) / static_cast<double>(clusters_sizes.at(i));
+      // clusters_means.emplace_back(std::vector<double>{fi1_mean, fi2_mean});
+      clusters_means.at(i).at(0) = fi1_mean;
+      clusters_means.at(i).at(1) = fi2_mean;
       double x1, y1, x2, y2;
       x1 = m_r_o * cos(fi1_mean / 180. * M_PI) + m_x_o;
       y1 = m_r_o * sin(fi1_mean / 180. * M_PI) + m_y_o;
@@ -322,13 +308,17 @@ class LinesClasters {
   }
 
   void filter_outliers() {
-    auto size = (m_result.size() + 1) / 2;
-    int k = 3, m = 3;
+    auto size = m_result.size() * (m_result.size() - 1) / 2;
+    int k = 0, m = 0;
     std::vector<Point<double>> intersections;
     std::vector<std::vector<double>> dataset;
     intersections.reserve(size);
     dataset.reserve(size);
-    for (int i = 1; i < size; ++i) {
+    // TODO: lines should come from clusters
+    Lines lines;
+    lines.m_linesvec = m_result;
+    std::vector<std::vector<Line>> hv_lines(lines.GetHVkMeans(2));
+    for (int i = 1; i < m_result.size(); ++i) {
       Line line1 = m_result.at(i);
       for (int j = 0; j < i; ++j) {
         Line line2 = m_result.at(j);
@@ -345,42 +335,42 @@ class LinesClasters {
     Hdbscan hdbscan;
     hdbscan.dataset = dataset;
     std::string execution_type{"Euclidean"};
-    int clasters_count = 0;
-    while (clasters_count != 2) {
-      hdbscan.execute(k, m, execution_type);
+    int clusters_count = 0;
+    while (clusters_count != 2) {
+      hdbscan.execute(CORE_POINTS + k, MIN_CLUSTER_SIZE + m, execution_type);
       hdbscan.displayResult();
-      clasters_count = *(std::max_element(hdbscan.normalizedLabels_.begin(), hdbscan.normalizedLabels_.end()));
-      if (clasters_count > 2) {
+      clusters_count = *(std::max_element(hdbscan.normalizedLabels_.begin(), hdbscan.normalizedLabels_.end()));
+      if (clusters_count > 2) {
         ++k;
-      } else {
+      } else if (CORE_POINTS + k > 1) {
         --k;
+      } else {
+        k = CORE_POINTS;
+        --m;
       }
     }
-    
-    std::vector<std::vector<std::vector<double>>> clasters_vect(clasters_count);
-    std::vector<std::vector<double>> clasters_sums(clasters_count, std::vector<double>(2, 0));
-    std::vector<int> clasters_sizes(clasters_count, 0);
-    for (int i = 0; i < m_size; ++i) {
-      int idx = hdbscan.normalizedLabels_.at(i) - 1;
-      if (idx == -2 || idx == -1) {
-        continue;
-      } else if (idx < clasters_count) {
-        clasters_vect.at(idx).push_back(m_dataset.at(i));
-        clasters_sums.at(idx).at(0) += m_dataset.at(i).at(0);
-        clasters_sums.at(idx).at(1) += m_dataset.at(i).at(1);
-        ++clasters_sizes.at(idx);
-      } else 
-        printf("!!! %d>%d !!!\n", idx + 1, clasters_count);
+    clusters_count = 3;
+    std::vector<std::vector<std::vector<double>>> clusters_vect(clusters_count);
+    std::vector<std::vector<double>> clusters_sums(clusters_count, std::vector<double>(2, 0));
+    std::vector<std::vector<double>> clusters_means(clusters_count, std::vector<double>(2));
+    std::vector<int> clusters_sizes(clusters_count, 0);
+    for (int i = 0; i < size; ++i) {
+      int idx = hdbscan.normalizedLabels_.at(i);
+      if (idx == -1) ++idx;
+      clusters_vect.at(idx).push_back(dataset.at(i));
+      clusters_sums.at(idx).at(0) += dataset.at(i).at(0);
+      clusters_sums.at(idx).at(1) += dataset.at(i).at(1);
+      ++clusters_sizes.at(idx);
     }
+    display_clusters(clusters_vect);
     // 2. get x1, y1, x2, y2 coordinates corresponding to each of those angles and put these points into LinesVec
-    std::vector<std::vector<double>> clasters_means(clasters_count, std::vector<double>(2));
-    m_result.reserve(clasters_count);
-    for (int i = 0; i < clasters_count; ++i) {
-      auto fi1_mean = clasters_sums.at(i).at(0) / static_cast<double>(clasters_sizes.at(i));
-      auto fi2_mean = clasters_sums.at(i).at(1) / static_cast<double>(clasters_sizes.at(i));
-      // clasters_means.emplace_back(std::vector<double>{fi1_mean, fi2_mean});
-      clasters_means.at(i).at(0) = fi1_mean;
-      clasters_means.at(i).at(1) = fi2_mean;
+    m_result.reserve(clusters_count);
+    for (int i = 0; i < clusters_count; ++i) {
+      auto fi1_mean = clusters_sums.at(i).at(0) / static_cast<double>(clusters_sizes.at(i));
+      auto fi2_mean = clusters_sums.at(i).at(1) / static_cast<double>(clusters_sizes.at(i));
+      // clusters_means.emplace_back(std::vector<double>{fi1_mean, fi2_mean});
+      clusters_means.at(i).at(0) = fi1_mean;
+      clusters_means.at(i).at(1) = fi2_mean;
     }
 
 

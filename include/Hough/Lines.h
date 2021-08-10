@@ -187,7 +187,7 @@ class Lines {
     }
   }
 
-  std::tuple<std::vector<Line>, std::vector<Line>> GetHVkMeans(
+  std::vector<std::vector<Line>> GetHVkMeans(
       int clusterCount = 0) {
     cv::Scalar colorTab[] = {cv::Scalar(0, 0, 255), cv::Scalar(0, 255, 0),
                              cv::Scalar(255, 100, 100), cv::Scalar(255, 0, 255),
@@ -229,12 +229,6 @@ class Lines {
       cv::Point ipt(angle, angle);
       cv::circle(img, ipt, 2, colorTab[clusterIdx], cv::FILLED, cv::LINE_AA);
     }
-    int firstLabel, secondLabel;
-    std::vector<std::pair<Line, int>> linesCounts;
-    std::transform(m_linesvec.begin(), m_linesvec.end(), labelsCounts.begin(),
-                   linesCounts.begin(), [](const Line& line, const int& count) {
-                     return std::make_pair(line, count);
-                   });
     std::vector<int> indices(clusterCount);
     std::iota(indices.begin(), indices.end(), 0);
     std::sort(indices.begin(), indices.end(),
@@ -250,12 +244,12 @@ class Lines {
       cv::circle(img, c, 40, colorTab[i], 1, cv::LINE_AA);
     }
 
-    std::vector<Line> claster1, claster2;
+    std::vector<std::vector<Line>> clusters(clusterCount);
     for (auto it = m_linesvec.begin(); it != m_linesvec.end(); ++it) {
       auto i = it - m_linesvec.begin();
-      // if (labels[i] == )
+      clusters.at(labels.at(i)).push_back(*it);
     }
-    return std::make_tuple(claster1, claster2);
+    return clusters;
 
     // cv::imshow("clusters", img);
     // cv::waitKey();

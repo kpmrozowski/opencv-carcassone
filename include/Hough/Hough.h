@@ -1,7 +1,7 @@
 #ifndef TWM_HOUGH_H
 #define TWM_HOUGH_H
 
-#include <Clasters/Clasters.h>
+#include <Clusters/Clusters.h>
 #include <Utils/display.h>
 #include <fmt/core.h>
 #include <stdio.h>
@@ -11,6 +11,8 @@
 #include <ctime>
 
 #include "Lines.h"
+
+#define MAX_LINES_COUNT 500
 
 namespace twm::hough {
 
@@ -101,7 +103,7 @@ cv::Mat detect_liness(const char *filename) {
 
     if (false) imshow("Source", src);
 
-    /*include/Clasters/Clasters.h
+    /*include/Clusters/Clusters.h
     // Standard Hough Line Transform
     std::vector<cv::Vec2f> lines; // will hold the results of the detection
     HoughLines(dst, lines, 1, CV_PI/180, 150); // runs the actual detection
@@ -144,7 +146,7 @@ cv::Mat detect_liness(const char *filename) {
     auto size = linesPCoords.size();
     fmt::print("size = {},\t canny_treshold1 = {},\t canny_treshold2 = {}\n",
                size, canny_treshold1, canny_treshold2);
-    if (size < 400 && size < size_old) {
+    if (size < MAX_LINES_COUNT && size < size_old) {
       lines = Lines(linesPCoords);
       display("Canny", dst);
       // cv::waitKey();
@@ -165,7 +167,7 @@ cv::Mat detect_liness(const char *filename) {
   }
 
   // lines.print();
-  LinesClasters linesClasters(lines.m_linesvec, frame_height, frame_width);
+  LinesClusters linesClusters(lines.m_linesvec, frame_height, frame_width);
 
   // Lines filteredLines = lines.GetHVlinesSimple(5);
   std::vector<Line> kMeansLines1, kMeansLines2;
@@ -188,7 +190,7 @@ cv::Mat detect_liness(const char *filename) {
   for (auto line : lines.m_linesvec) {
     line.draw(cdstP, 0, 0, 255);
   }
-  for (auto line : linesClasters.m_result) {
+  for (auto line : linesClusters.m_result) {
     // line.print();
     line.draw(cdstP, 255, 0, 0);
   }
