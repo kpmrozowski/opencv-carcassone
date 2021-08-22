@@ -187,8 +187,7 @@ class Lines {
     }
   }
 
-  std::vector<std::vector<Line>> GetHVkMeans(
-      int clusterCount = 0) {
+  std::vector<std::vector<Line>> GetHVkMeans(int clusterCount = 0) {
     cv::Scalar colorTab[] = {cv::Scalar(0, 0, 255), cv::Scalar(0, 255, 0),
                              cv::Scalar(255, 100, 100), cv::Scalar(255, 0, 255),
                              cv::Scalar(0, 255, 255)};
@@ -207,8 +206,9 @@ class Lines {
                      if (angle < -90. || angle > 180.) {
                        std::cout << "angle < -90. || angle > 90." << std::endl;
                        return static_cast<float>(.5);
-                     } else
+                     } else {
                        return static_cast<float>(l.angle());
+                     }
                    });
     cv::Mat cosines_Mat(sampleCount, 1, CV_32FC1, &cosines[0]);
 
@@ -219,29 +219,31 @@ class Lines {
         3, cv::KMEANS_PP_CENTERS, centers);
     std::cout << "Compactness: " << compactness << std::endl;
 
-    std::vector<int> labelsCounts(clusterCount, 0);
-    for (const auto& label : labels) ++labelsCounts[label];
-
-    img = cv::Scalar::all(0);
-    for (int i = 0; i < sampleCount; i++) {
-      int clusterIdx = labels[i];
-      auto angle = std::acos(cosines.at(i));
-      cv::Point ipt(angle, angle);
-      cv::circle(img, ipt, 2, colorTab[clusterIdx], cv::FILLED, cv::LINE_AA);
-    }
-    std::vector<int> indices(clusterCount);
-    std::iota(indices.begin(), indices.end(), 0);
-    std::sort(indices.begin(), indices.end(),
-              [labelsCounts](int A, int B) -> bool {
-                return labelsCounts[A] > labelsCounts[B];
-              });
-    std::nth_element(labelsCounts.begin(), labelsCounts.begin() + 1,
-                     labelsCounts.end(), [labelsCounts](int A, int B) -> bool {
-                       return labelsCounts[A] > labelsCounts[B];
-                     });
-    for (int i = 0; i < (int)centers.size(); ++i) {
-      cv::Point2f c(centers[i], centers[i]);
-      cv::circle(img, c, 40, colorTab[i], 1, cv::LINE_AA);
+    if (false) {  // do some stats?
+      std::vector<int> labelsCounts(clusterCount, 0);
+      for (const auto& label : labels) ++labelsCounts[label];
+      img = cv::Scalar::all(0);
+      for (int i = 0; i < sampleCount; i++) {
+        int clusterIdx = labels[i];
+        auto angle = std::acos(cosines.at(i));
+        cv::Point ipt(angle, angle);
+        cv::circle(img, ipt, 2, colorTab[clusterIdx], cv::FILLED, cv::LINE_AA);
+      }
+      std::vector<int> indices(clusterCount);
+      std::iota(indices.begin(), indices.end(), 0);
+      std::sort(indices.begin(), indices.end(),
+                [labelsCounts](int A, int B) -> bool {
+                  return labelsCounts[A] > labelsCounts[B];
+                });
+      std::nth_element(labelsCounts.begin(), labelsCounts.begin() + 1,
+                       labelsCounts.end(),
+                       [labelsCounts](int A, int B) -> bool {
+                         return labelsCounts[A] > labelsCounts[B];
+                       });
+      for (int i = 0; i < (int)centers.size(); ++i) {
+        cv::Point2f c(centers[i], centers[i]);
+        cv::circle(img, c, 40, colorTab[i], 1, cv::LINE_AA);
+      }
     }
 
     std::vector<std::vector<Line>> clusters(clusterCount);
@@ -308,11 +310,11 @@ class Lines {
               if (m_pararrel_pairs[j].first.p1().y >
                   m_pararrel_pairs[j].second.p1().y) {
                 // std::cout << "(" << i << "," << j << "): if1 ";
-                 NW = Point(m_pararrel_pairs[i].first.p1().x,
-                            m_pararrel_pairs[j].first.p1().y);
+                NW = Point(m_pararrel_pairs[i].first.p1().x,
+                           m_pararrel_pairs[j].first.p1().y);
                 NE = Point(m_pararrel_pairs[i].second.p1().x,
-                            m_pararrel_pairs[j].first.p1().y);
-                 SW = Point(m_pararrel_pairs[i].first.p1().x,
+                           m_pararrel_pairs[j].first.p1().y);
+                SW = Point(m_pararrel_pairs[i].first.p1().x,
                            m_pararrel_pairs[j].second.p1().y);
                 SE = Point(m_pararrel_pairs[i].second.p1().x,
                            m_pararrel_pairs[j].second.p1().y);

@@ -32,16 +32,15 @@ int main() {
     // std::cout << name << '\n' ;
     std::string path = "../../../../images/game2/";
     std::string full_path = path + std::to_string(img_id) + std::string(".jpg");
-    cv::Mat img_orig =
-        cv::imread(cv::samples::findFile(full_path.c_str()), cv::IMREAD_COLOR);
+    cv::Mat img_orig = cv::imread(cv::samples::findFile(full_path.c_str()), cv::IMREAD_COLOR);
     // img_orig = cv::imread( cv::samples::findFile(
     // "/home/kmro/Documents/pw_eiti/twm/test_set_color/test_02.jpg" ),
-    // cv::IMREAD_COLOR ); cv::Mat img_lines =
-    // twm::hough::detect_liness(full_path.c_str());
-    cv::Mat img_lines = twm::hough::detect_liness(
-        "/home/kmro/Documents/pw_eiti/twm/opencv-carcassone/images/game2/"
-        "72.jpg");
-    display("img_lines", img_lines);
+    // cv::IMREAD_COLOR );
+    cv::Mat img_lines = twm::hough::detect_liness(full_path.c_str());
+    // cv::Mat img_lines = twm::hough::detect_liness(
+    //     "/home/kmro/Documents/pw_eiti/twm/opencv-carcassone/images/game2/"
+    //     "72.jpg");
+    // display("img_lines", img_lines);
 
     // cv::Mat img_orig_masked = copyOneImage(img_orig);
     // for (size_t x = 0; x < img_orig.rows; x++) {

@@ -26,6 +26,18 @@ void display(std::string wndName, const cv::Mat& img, bool wait = true) {
     }
 }
 
+void display_timed(std::string wndName, const cv::Mat& img, int time_limit) {
+    int frame_width = img.cols;
+	int frame_height = img.rows;
+    // float scale = 1080. / frame_height;
+    float scale = 1600. / frame_height;
+    cv::Mat img_copy = copyOneImage(img);
+    cv::resize(img_copy, img_copy, cv::Size(static_cast<std::size_t>(frame_width * scale), static_cast<std::size_t>(frame_height * scale)));
+    imshow(wndName, img_copy);
+    cv::waitKey(time_limit);
+    cv::destroyWindow(wndName);
+}
+
 
 
 #endif

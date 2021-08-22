@@ -18,7 +18,7 @@
 #include <HDBSCAN_CPP/Hdbscan/hdbscan.hpp>
 // #include "Square.h"
 #define _USE_MATH_DEFINES
-#define CORE_POINTS 16       // the number of points to compute core distance
+#define CORE_POINTS 7       // the number of points to compute core distance
 #define MIN_CLUSTER_SIZE 3
 #define POINT_SIZE 5
 
@@ -192,6 +192,23 @@ class LinesClusters {
     double zz = 1.;
   }
 
+  void display_clusters(std::vector<std::vector<Line>> clusters_vect) {
+    int i = 0;
+    for (const auto& cluster : clusters_vect) {
+      auto color = random_color();
+      // color.insert({"size", "2.0"});
+      std::vector<double> x(2), y(2);
+      for (int i = 0; i < cluster.size(); ++i) {
+        x.at(0) = cluster.at(i).p1().x;
+        y.at(0) = cluster.at(i).p1().y;
+        x.at(1) = cluster.at(i).p2().x;
+        y.at(1) = cluster.at(i).p2().y;
+        matplotlibcpp::plot(x, y, color);
+      }
+    }
+    matplotlibcpp::show();
+  }
+
   void display_clusters(std::vector<std::vector<std::vector<double>>> clusters_vect) {
     int i = 0;
     for (const auto& cluster : clusters_vect) {
@@ -303,82 +320,151 @@ class LinesClusters {
       y2 = m_r_o * sin(fi2_mean / 180. * M_PI) + m_y_o;
       m_result.emplace_back(cv::Point(x1, y1), cv::Point(x2, y2));
     }
-    printf("\n");
-    ;
+  }
+
+  template <typename T>
+  constexpr const bool is_between(T a, T A1, T A2, T A3, T A4) const noexcept {
+    if ((a < std::max(std::min(A1, A2), std::min(A3, A4))) ||
+        (a > std::min(std::max(A1, A2), std::max(A3, A4)))) {
+      return false;  // intersection is out of bound
+    }
+    return true;
+  }
+
+  bool are_intersecting(const Line& l1, const Line& l2) {
+    Point<double> p{l1, l2};
+    double X1 = l1.p1().x;
+    double X2 = l1.p2().x;
+    double X3 = l2.p1().x;
+    double X4 = l2.p2().x;
+    double Y1 = l1.p1().y;
+    double Y2 = l1.p2().y;
+    double Y3 = l2.p1().y;
+    double Y4 = l2.p2().y;
+    return is_between(p.x, X1, X2, X3, X4) && is_between(p.y, Y1, Y2, Y3, Y4);
   }
 
   void filter_outliers() {
+    Lines lines;
+    lines.m_linesvec = m_result;
+    /**
+     * @brief k_means clusters count
+     */
+    int clusters_count = 4;
+    std::vector<std::vector<Line>> hv_lines(lines.GetHVkMeans(clusters_count));
+    display_clusters(hv_lines);
+    /*###################################################
+    #         Merge clusters that needs a merge         #
+    ###################################################*/
+    std::vector<bool> needs_merge(clusters_count * clusters_count);
+    for (int i = 1; i < clusters_count; ++i) {
+      const auto& cluster1 = hv_lines.at(i);
+      for (int j = 0; j < i; ++j) {
+        const auto& cluster2 = hv_lines.at(j);
+        bool intersection_found = false;
+        for (const Line& line1 : cluster1) {
+          for (const Line& line2 : cluster2) {
+            if (are_intersecting(line1, line2)) {
+              intersection_found = true;
+              if (false) {
+                std::vector<std::vector<Line>> clusters_vect;
+                clusters_vect.emplace_back(std::vector<Line>{line1, line2});
+                display_clusters(clusters_vect);
+              }
+              break;
+            }
+          }
+          if (intersection_found) {
+            break;
+          }
+        }
+        if (!intersection_found) {
+          needs_merge.at(i * clusters_count + j).flip();
+        }
+      }
+    }
+  }
+
+  void filter_outliers_if_perspective_consideration_is_needed() {
     auto size = m_result.size() * (m_result.size() - 1) / 2;
     int k = 0, m = 0;
     std::vector<Point<double>> intersections;
     std::vector<std::vector<double>> dataset;
     intersections.reserve(size);
     dataset.reserve(size);
-    // TODO: lines should come from clusters
     Lines lines;
     lines.m_linesvec = m_result;
+    // return;
     std::vector<std::vector<Line>> hv_lines(lines.GetHVkMeans(2));
-    for (int i = 1; i < m_result.size(); ++i) {
-      Line line1 = m_result.at(i);
-      for (int j = 0; j < i; ++j) {
-        Line line2 = m_result.at(j);
-        intersections.emplace_back(line1, line2);
-        // [i * (i - 1) / 2 + j] = Point(line1, line2);
+    std::vector<Line>& hLines = hv_lines.at(0);
+    std::vector<Line>& vLines = hv_lines.at(1);
+    for (const auto& lines_vec : hv_lines) {
+      for (int i = 1; i < lines_vec.size(); ++i) {
+        const Line& line1 = lines_vec.at(i);
+        for (int j = 0; j < i; ++j) {
+          const Line& line2 = lines_vec.at(j);
+          intersections.emplace_back(line1, line2);
+          // [i * (i - 1) / 2 + j] = Point(line1, line2);
+        }
       }
-    }
-    for (int i = 0; i < size; ++i) {
-      std::vector<double> point(2);
-      point.at(0) = intersections.at(i).x;
-      point.at(1) = intersections.at(i).y;
-      dataset.push_back(point);
-    }
-    Hdbscan hdbscan;
-    hdbscan.dataset = dataset;
-    std::string execution_type{"Euclidean"};
-    int clusters_count = 0;
-    while (clusters_count != 2) {
-      hdbscan.execute(CORE_POINTS + k, MIN_CLUSTER_SIZE + m, execution_type);
-      hdbscan.displayResult();
-      clusters_count = *(std::max_element(hdbscan.normalizedLabels_.begin(), hdbscan.normalizedLabels_.end()));
-      if (clusters_count > 2) {
-        ++k;
-      } else if (CORE_POINTS + k > 1) {
-        --k;
-      } else {
-        k = CORE_POINTS;
-        --m;
+      for (const auto& intersection : intersections) {
+        std::vector<double> point(2);
+        point.at(0) = intersection.x;
+        point.at(1) = intersection.y;
+        dataset.push_back(point);
       }
+      Hdbscan hdbscan;
+      hdbscan.dataset = dataset;
+      std::string execution_type{"Euclidean"};
+      int clusters_count = 0;
+      while (clusters_count != 2) {
+        hdbscan.execute(CORE_POINTS + k, MIN_CLUSTER_SIZE + m, execution_type);
+        hdbscan.displayResult();
+        clusters_count = *(std::max_element(hdbscan.normalizedLabels_.begin(),
+                                            hdbscan.normalizedLabels_.end()));
+        if (clusters_count > 2) {
+          ++k;
+        } else if (CORE_POINTS + k > 1) {
+          --k;
+        } else {
+          k = CORE_POINTS;
+          --m;
+        }
+      }
+      clusters_count = 3;
+      std::vector<std::vector<std::vector<double>>> clusters_vect(
+          clusters_count);
+      std::vector<std::vector<double>> clusters_sums(clusters_count,
+                                                     std::vector<double>(2, 0));
+      std::vector<std::vector<double>> clusters_means(clusters_count,
+                                                      std::vector<double>(2));
+      std::vector<int> clusters_sizes(clusters_count, 0);
+      for (int i = 0; i < dataset.size(); ++i) {
+        int idx = hdbscan.normalizedLabels_.at(i);
+        if (idx == -1) ++idx;
+        clusters_vect.at(idx).push_back(dataset.at(i));
+        clusters_sums.at(idx).at(0) += dataset.at(i).at(0);
+        clusters_sums.at(idx).at(1) += dataset.at(i).at(1);
+        ++clusters_sizes.at(idx);
+      }
+      display_clusters(clusters_vect);
+      // 2. get x1, y1, x2, y2 coordinates corresponding to each of those angles
+      // and put these points into LinesVec
+      m_result.reserve(clusters_count);
+      for (int i = 0; i < clusters_count; ++i) {
+        auto fi1_mean = clusters_sums.at(i).at(0) /
+                        static_cast<double>(clusters_sizes.at(i));
+        auto fi2_mean = clusters_sums.at(i).at(1) /
+                        static_cast<double>(clusters_sizes.at(i));
+        // clusters_means.emplace_back(std::vector<double>{fi1_mean, fi2_mean});
+        clusters_means.at(i).at(0) = fi1_mean;
+        clusters_means.at(i).at(1) = fi2_mean;
+      }
+      hdbscan.labels_;
+      hdbscan.membershipProbabilities_;
+      hdbscan.outlierScores_;
+      printf("\n");
     }
-    clusters_count = 3;
-    std::vector<std::vector<std::vector<double>>> clusters_vect(clusters_count);
-    std::vector<std::vector<double>> clusters_sums(clusters_count, std::vector<double>(2, 0));
-    std::vector<std::vector<double>> clusters_means(clusters_count, std::vector<double>(2));
-    std::vector<int> clusters_sizes(clusters_count, 0);
-    for (int i = 0; i < size; ++i) {
-      int idx = hdbscan.normalizedLabels_.at(i);
-      if (idx == -1) ++idx;
-      clusters_vect.at(idx).push_back(dataset.at(i));
-      clusters_sums.at(idx).at(0) += dataset.at(i).at(0);
-      clusters_sums.at(idx).at(1) += dataset.at(i).at(1);
-      ++clusters_sizes.at(idx);
-    }
-    display_clusters(clusters_vect);
-    // 2. get x1, y1, x2, y2 coordinates corresponding to each of those angles and put these points into LinesVec
-    m_result.reserve(clusters_count);
-    for (int i = 0; i < clusters_count; ++i) {
-      auto fi1_mean = clusters_sums.at(i).at(0) / static_cast<double>(clusters_sizes.at(i));
-      auto fi2_mean = clusters_sums.at(i).at(1) / static_cast<double>(clusters_sizes.at(i));
-      // clusters_means.emplace_back(std::vector<double>{fi1_mean, fi2_mean});
-      clusters_means.at(i).at(0) = fi1_mean;
-      clusters_means.at(i).at(1) = fi2_mean;
-    }
-
-
-
-    hdbscan.labels_;
-    hdbscan.membershipProbabilities_;
-    hdbscan.outlierScores_;
-    printf("\n");
 
   }
 };

@@ -207,12 +207,10 @@ cv::Mat detect_liness(const char *filename) {
   cv::resize(cdstP, cdstP,
              cv::Size(static_cast<std::size_t>(frame_width * scale),
                       static_cast<std::size_t>(frame_height * scale)));
-
-  cv::imshow("Detected Lines (in red) - Probabilistic Line Transform", cdstP);
-
-  cv::waitKey();
+  display("Detected Lines (in red) - Probabilistic Line Transform", cdstP);
   return cdstP;
 }
+
 }  // namespace twm::hough
 
 #endif  // TWM_HOUGH_H

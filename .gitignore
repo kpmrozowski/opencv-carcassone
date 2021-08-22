@@ -7,6 +7,7 @@ images/game1_copy
 images/game2
 images/game2_copy
 .vscode
+.VSCodeCounter
 
 # Prerequisites
 *.d
