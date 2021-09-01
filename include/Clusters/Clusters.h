@@ -1,5 +1,6 @@
 #ifndef CLUSTERS_H
 #define CLUSTERS_H
+#pragma once
 
 #include <Hough/Line.h>
 #include <Hough/Lines.h>
@@ -14,8 +15,13 @@
 #include <limits>
 #include <vector>
 #include <numeric>
+#include <thread>
+#include <mutex>
+#include <queue>
+#include <condition_variable>
 #include <fmt/core.h>
 #include <HDBSCAN_CPP/Hdbscan/hdbscan.hpp>
+#include "Clusters/Displayer.h"
 // #include "Square.h"
 #define _USE_MATH_DEFINES
 #define CORE_POINTS 7       // the number of points to compute core distance
@@ -23,6 +29,12 @@
 #define POINT_SIZE 5
 
 using PointLines = std::vector<std::pair<Point<double>, Point<double>>>;
+
+// class DataChunk {
+//   std::queue<> queue;
+//   ;
+// };
+namespace twm::clusters {
 
 class LinesClusters {
  public:
@@ -38,7 +50,12 @@ class LinesClusters {
   Hdbscan m_hdbscan;
   std::vector<std::vector<double>> m_dataset;
   std::vector<Line> m_result;
-  
+  std::mutex m_mut;
+  EventQueue<EventBase> m_events_queue;
+  std::condition_variable m_data_cond;
+  std::function<void()> m_displayer_thread;
+  // std::thread& displayer_thread;
+
   LinesClusters(std::vector<Line> linesvec, int img_rows, int img_cols)
    : m_size(linesvec.size())
    , m_x_o(img_rows / 2.)
@@ -47,13 +64,46 @@ class LinesClusters {
    , m_distances_table(std::vector<std::vector<double>>(m_size, std::vector<double>(m_size, -1.)))
    , m_core_distances(m_size, -1.)
    , m_mutual_reachability_distances_table(std::vector<std::vector<double>>(m_size, std::vector<double>(m_size, -1.))) {
+     auto& events_queue_ref = m_events_queue;
+     auto& data_cond_ref = m_data_cond;
+    //  m_displayer_thread = [&events_queue_ref, &data_cond_ref]() {
+    //   while (true) {
+    //     std::unique_lock<std::mutex> lock(events_queue_ref.mut);
+    //     data_cond_ref.wait(lock, [&events_queue_ref]{return !events_queue_ref.empty();});
+    //     events_queue_ref.ExecuteOne();
+    //   }
+    // };
+    // std::thread worker([&events_queue_ref, &data_cond_ref]() {
+    //   while (true) {
+    //     std::unique_lock<std::mutex> lock(events_queue_ref.mut);
+    //     data_cond_ref.wait(lock, [&events_queue_ref]{return !events_queue_ref.empty();});
+    //     events_queue_ref.ExecuteOne();
+    //   }
+    // });
+    auto aaa = [](int a){return a;};
     twolinesCluster(linesvec, img_rows, img_cols);
+    m_events_queue.AddEvent<PrintPointLines>(m_pointLines);
     // display_pointlines();
     get_statistics();
     apply_HDBSCAN();
     get_lines_back_from_clusters();
     filter_outliers();
   }
+
+  // void display_thread() {
+  //   while (true) {
+  //     std::unique_lock<std::mutex> lk(mut);
+  //     auto& queue = data_queue;
+  //     data_cond.wait(lk, [&queue]{return !queue.empty();});
+  //     DataChunk data = data_queue.front();
+  //     data_queue.pop();
+  //     lk.unlock();
+  //     data.display();
+  //     // if (is_last_chunk(data)) {
+  //     //   break;
+  //     // }
+  //   }
+  // }
 
   void print() {
       fmt::print("fi1\t fi2\n");
@@ -173,7 +223,8 @@ class LinesClusters {
     /*###################################################
     #                 The gained dataset                #
     ###################################################*/
-    std::vector<double> x(m_size, -1), y(m_size, -1), x1(m_size, -1), y1(m_size, -1), x2(m_size, -1), y2(m_size, -1);
+    std::vector<double> x(m_size, -1), y(m_size, -1), x1(m_size, -1),
+        y1(m_size, -1), x2(m_size, -1), y2(m_size, -1);
     for (int i = 0; i < m_size; ++i) {
       x1.at(i) = m_pointLines.at(i).first.x;
       y1.at(i) = m_pointLines.at(i).first.y;
@@ -224,6 +275,10 @@ class LinesClusters {
       }
     }
     matplotlibcpp::show();
+  }
+
+  void display_image(std::string wndName, const cv::Mat& img, bool wait = true) {
+    m_events_queue.AddEvent<DisplayImage>(wndName, img, wait);
   }
 
   /** @brief sorted distances, means, medians */
@@ -304,7 +359,8 @@ class LinesClusters {
       clusters_sums.at(idx).at(1) += m_dataset.at(i).at(1);
       ++clusters_sizes.at(idx);
     }
-    display_clusters(clusters_vect);
+    m_events_queue.AddEvent<DisplayClusteredVects>(clusters_vect);
+    // display_clusters(clusters_vect);
     // 2. get x1, y1, x2, y2 coordinates corresponding to each of those angles and put these points into LinesVec
     m_result.reserve(clusters_count);
     for (int i = 0; i < clusters_count; ++i) {
@@ -352,7 +408,8 @@ class LinesClusters {
      */
     int clusters_count = 4;
     std::vector<std::vector<Line>> hv_lines(lines.GetHVkMeans(clusters_count));
-    display_clusters(hv_lines);
+    m_events_queue.AddEvent<DisplayClusteredLines>(hv_lines);
+    // display_clusters(hv_lines);
     /*###################################################
     #         Merge clusters that needs a merge         #
     ###################################################*/
@@ -369,7 +426,8 @@ class LinesClusters {
               if (false) {
                 std::vector<std::vector<Line>> clusters_vect;
                 clusters_vect.emplace_back(std::vector<Line>{line1, line2});
-                display_clusters(clusters_vect);
+                m_events_queue.AddEvent<DisplayClusteredLines>(clusters_vect);
+                // display_clusters(clusters_vect);
               }
               break;
             }
@@ -447,7 +505,8 @@ class LinesClusters {
         clusters_sums.at(idx).at(1) += dataset.at(i).at(1);
         ++clusters_sizes.at(idx);
       }
-      display_clusters(clusters_vect);
+      // display_clusters(clusters_vect);
+      m_events_queue.AddEvent<DisplayClusteredVects>(clusters_vect);
       // 2. get x1, y1, x2, y2 coordinates corresponding to each of those angles
       // and put these points into LinesVec
       m_result.reserve(clusters_count);
@@ -468,5 +527,5 @@ class LinesClusters {
 
   }
 };
-
+}  // namespace twm::clusters
 #endif

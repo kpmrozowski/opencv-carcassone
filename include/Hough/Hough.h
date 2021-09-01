@@ -148,7 +148,7 @@ cv::Mat detect_liness(const char *filename) {
                size, canny_treshold1, canny_treshold2);
     if (size < MAX_LINES_COUNT && size < size_old) {
       lines = Lines(linesPCoords);
-      display("Canny", dst);
+      // display("Canny", dst);
       // cv::waitKey();
       break;
     }
@@ -167,8 +167,8 @@ cv::Mat detect_liness(const char *filename) {
   }
 
   // lines.print();
-  LinesClusters linesClusters(lines.m_linesvec, frame_height, frame_width);
-
+  clusters::LinesClusters linesClusters(lines.m_linesvec, frame_height, frame_width);
+  linesClusters.display_image("Canny", dst);
   // Lines filteredLines = lines.GetHVlinesSimple(5);
   std::vector<Line> kMeansLines1, kMeansLines2;
   //// std::tie(kMeansLines1, kMeansLines2) = lines.GetHVkMeans(18);
@@ -207,7 +207,8 @@ cv::Mat detect_liness(const char *filename) {
   cv::resize(cdstP, cdstP,
              cv::Size(static_cast<std::size_t>(frame_width * scale),
                       static_cast<std::size_t>(frame_height * scale)));
-  display("Detected Lines (in red) - Probabilistic Line Transform", cdstP);
+  linesClusters.display_image("Detected Lines (in red) - Probabilistic Line Transform", cdstP);
+  // display("Detected Lines (in red) - Probabilistic Line Transform", cdstP);
   return cdstP;
 }
 
